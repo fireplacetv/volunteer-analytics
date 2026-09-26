@@ -1,10 +1,10 @@
 {
   "tables": {
     "Volunteers": "tblY3mOtcLolIK4zy",
-    "Projects": "YOUR_PROJECTS_TABLE_ID",
-    "Project volunteers": "YOUR_PROJECT_VOLUNTEERS_TABLE_ID",
-    "Events": "YOUR_EVENTS_TABLE_ID",
-    "Event attendance": "YOUR_EVENT_ATTENDANCE_TABLE_ID",
-    "Meeting attendance": "YOUR_MEETING_ATTENDANCE_TABLE_ID"
+    "Projects": "tblHHxE6GynJ5LXg1",
+    "Project volunteers": "tblxMoejcHv75yfYl",
+    "Events": "tblTxl4xLcnMyqEfS",
+    "Event attendance": "tblPU8dgnIu6Va07T",
+    "Meeting attendance": "tbldhIqoTu5vJrgdH"
   }
 }
