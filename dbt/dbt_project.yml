@@ -1,0 +1,22 @@
+name: 'volunteer_analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'volunteer_analytics'
+
+model-paths: ['models']
+analysis-paths: ['analysis']
+test-paths: ['tests']
+data-paths: ['data']
+macro-paths: ['macros']
+snapshot-paths: ['snapshots']
+
+target-path: 'target'
+clean-targets:
+  - 'target'
+  - 'dbt_packages'
+
+models:
+  volunteer_analytics:
+    staging:
+      +materialized: view

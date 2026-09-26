@@ -1,0 +1,2 @@
+dlt[duckdb]==1.0.0
+dlt[airtable]==1.0.0

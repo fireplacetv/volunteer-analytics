@@ -1,0 +1,43 @@
+version: 2
+
+sources:
+  - name: airtable
+    description: Raw data from Airtable
+    database: volunteer_data
+    schema: airtable
+    tables:
+      - name: volunteers
+        description: List of volunteers
+        columns:
+          - name: id
+            description: Volunteer record ID
+
+      - name: projects
+        description: List of projects
+        columns:
+          - name: id
+            description: Project record ID
+
+      - name: project_volunteers
+        description: Junction table linking volunteers to projects
+        columns:
+          - name: id
+            description: Junction record ID
+
+      - name: events
+        description: List of events
+        columns:
+          - name: id
+            description: Event record ID
+
+      - name: event_attendance
+        description: Junction table for event attendance
+        columns:
+          - name: id
+            description: Attendance record ID
+
+      - name: meeting_attendance
+        description: Junction table for meeting attendance
+        columns:
+          - name: id
+            description: Attendance record ID

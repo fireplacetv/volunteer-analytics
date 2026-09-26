@@ -1,0 +1,9 @@
+volunteer_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '/workspace/dlt/airtable_pipeline/volunteer_data.duckdb'
+      schema: airtable
+      threads: 4
+      timeout_seconds: 300
