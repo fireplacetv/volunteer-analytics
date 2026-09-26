@@ -2,51 +2,49 @@ import os
 import requests
 import dlt
 from dlt.common.typing import TDataItem
-from typing import Iterator
+from typing import Iterator, Callable
 
 
-@dlt.resource(name="airtable_table", write_disposition="replace")
-def airtable_resource(
-    base_id: str,
-    table_name: str,
-    api_key: str,
-) -> Iterator[TDataItem]:
+def create_airtable_resource(
+    table_name: str, base_id: str, api_key: str
+) -> Callable[[], Iterator[TDataItem]]:
     """
-    Fetch records from an Airtable table and yield them as data items.
-
-    Args:
-        base_id: Airtable Base ID
-        table_name: Name of the table to fetch
-        api_key: Airtable API key
-
-    Yields:
-        Records from the Airtable table
+    Factory function to create a resource for a specific Airtable table.
+    Returns a resource with the table name as its identifier.
     """
-    url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
-    headers = {"Authorization": f"Bearer {api_key}"}
-    offset = None
 
-    while True:
-        params = {"pageSize": 100}
-        if offset:
-            params["offset"] = offset
+    @dlt.resource(name=table_name, write_disposition="replace")
+    def fetch_table() -> Iterator[TDataItem]:
+        """
+        Fetch records from an Airtable table and yield them as data items.
+        """
+        url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        offset = None
 
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
+        while True:
+            params = {"pageSize": 100}
+            if offset:
+                params["offset"] = offset
 
-        data = response.json()
-        records = data.get("records", [])
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
 
-        for record in records:
-            yield {
-                "id": record["id"],
-                "fields": record["fields"],
-                "created_time": record.get("createdTime"),
-            }
+            data = response.json()
+            records = data.get("records", [])
 
-        offset = data.get("offset")
-        if not offset:
-            break
+            for record in records:
+                yield {
+                    "id": record["id"],
+                    "fields": record["fields"],
+                    "created_time": record.get("createdTime"),
+                }
+
+            offset = data.get("offset")
+            if not offset:
+                break
+
+    return fetch_table
 
 
 def load_volunteer_data():
@@ -76,13 +74,8 @@ def load_volunteer_data():
 
     load_info = None
     for table_name in table_names:
-        source = airtable_resource(
-            base_id=base_id,
-            table_name=table_name,
-            api_key=api_key,
-        )
-        source.name = table_name
-        load_info = pipeline.run(source)
+        resource = create_airtable_resource(table_name, base_id, api_key)
+        load_info = pipeline.run(resource)
 
     return load_info
 
