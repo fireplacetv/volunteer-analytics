@@ -77,10 +77,10 @@ def load_volunteer_data():
     table_config = load_table_config()
 
     pipeline = dlt.pipeline(
-        pipeline_name="airtable_pipeline",
+        pipeline_name="openoakland",
         destination="duckdb",
         dataset_name="airtable",
-        pipelines_dir="dlt/airtable_pipeline",
+        pipelines_dir="artifacts/dlt/airtable_pipeline",
     )
 
     load_info = None
