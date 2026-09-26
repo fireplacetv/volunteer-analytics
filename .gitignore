@@ -12,7 +12,8 @@ __pycache__/
 # Pipeline artifacts (generated, can be regenerated)
 artifacts/
 dlt/airtable_pipeline/airtable_tables.json
-openoakland.duckdb
+*.duckdb
+*.duckdb.wal
 
 # IDE
 .vscode/

@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  dev:
+    build: .
+    environment:
+      DBT_PROFILES_DIR: /workspace/dbt
+      DBT_PROJECT_DIR: /workspace/dbt
+    env_file: .env
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    stdin_open: true
+    tty: true

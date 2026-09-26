@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: stg_volunteers
+    description: Staging layer for volunteers
+    columns:
+      - name: id
+        description: Unique volunteer record ID from Airtable
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_projects
+    description: Staging layer for projects
+    columns:
+      - name: id
+        description: Unique project record ID from Airtable
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_project_volunteers
+    description: Staging layer for project volunteers bridge table
+    columns:
+      - name: id
+        description: Unique junction record ID from Airtable
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_events
+    description: Staging layer for events
+    columns:
+      - name: id
+        description: Unique event record ID from Airtable
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_event_attendance
+    description: Staging layer for event attendance
+    columns:
+      - name: id
+        description: Unique attendance record ID from Airtable
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_meeting_feedback
+    description: Staging layer for meeting feedback
+    columns:
+      - name: id
+        description: Unique feedback record ID from Airtable
+        tests:
+          - not_null
+          - unique

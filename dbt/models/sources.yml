@@ -36,8 +36,8 @@ sources:
           - name: id
             description: Attendance record ID
 
-      - name: meeting_attendance
-        description: Junction table for meeting attendance
+      - name: meeting_feedback
+        description: Meeting feedback records
         columns:
           - name: id
-            description: Attendance record ID
+            description: Feedback record ID
