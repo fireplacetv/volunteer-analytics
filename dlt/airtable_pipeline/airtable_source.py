@@ -25,6 +25,42 @@ def get_pipelines_dir():
     return os.path.join(os.path.dirname(__file__), ".dlt")
 
 
+def normalize_linked_records():
+    """
+    Post-process DuckDB to flatten linked record arrays into bridge tables.
+    Extracts volunteer_id and project_id from the project_volunteers junction table.
+    """
+    db_path = get_db_path()
+    conn = duckdb.connect(db_path)
+
+    # Extract volunteer and project IDs from the project_volunteers linked record fields
+    try:
+        conn.execute("""
+            CREATE OR REPLACE TABLE airtable.project_volunteers_normalized AS
+            SELECT
+                pv.id,
+                pv.created_time,
+                pv.fields__join_id as join_id,
+                pv.fields__volunteer_id[idx] as volunteer_id,
+                pv.fields__project_id[idx] as project_id
+            FROM (
+                SELECT id, created_time, fields__volunteer_id, fields__project_id
+                FROM airtable.project_volunteers
+                WHERE fields__volunteer_id IS NOT NULL AND fields__project_id IS NOT NULL
+            ) as pv,
+            LATERAL GENERATE_SUBSCRIPTS(pv.fields__volunteer_id, 1) AS t(idx)
+            WHERE idx <= LEAST(
+                CARDINALITY(pv.fields__volunteer_id),
+                CARDINALITY(pv.fields__project_id)
+            )
+        """)
+    except Exception as e:
+        # If the above query fails (e.g., fields are not arrays), just skip
+        print(f"Note: Could not normalize project_volunteers linked records: {e}")
+
+    conn.close()
+
+
 def create_airtable_resource(
     table_name: str, table_id: str, base_id: str, api_key: str
 ) -> Callable[[], Iterator[TDataItem]]:
@@ -108,6 +144,9 @@ def load_volunteer_data():
 
     if resources:
         load_info = pipeline.run(resources)
+
+    # Post-process to flatten linked records into clean bridge tables
+    normalize_linked_records()
 
     return load_info
 
