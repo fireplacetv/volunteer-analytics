@@ -55,10 +55,20 @@ AIRTABLE_BASE_ID=your_base_id_here
 
 #### Getting your Base ID
 
-1. Open your Airtable base in a browser
-2. Look at the URL: `https://airtable.com/BASE_ID/tblXXXXX/...`
-3. Copy the `BASE_ID` portion (alphanumeric string after `airtable.com/`)
-4. Paste it into your `.env` file as `AIRTABLE_BASE_ID`
+The Base ID uniquely identifies your Airtable database. It's a 17-character alphanumeric string.
+
+1. **Open your Airtable base** in a web browser (at https://airtable.com)
+2. **Find the Base ID in the URL**:
+   - The URL looks like: `https://airtable.com/appXXXXXXXXXXXXXX/tblYYYYYYYYYYYYYY/...`
+   - The Base ID is the part starting with `app`: `appXXXXXXXXXXXXXX`
+   - Example: `appK9pz1A2b3C4dEf`
+3. **Copy the entire Base ID** (including the `app` prefix)
+4. **Paste it** into your `.env` file:
+   ```
+   AIRTABLE_BASE_ID=appK9pz1A2b3C4dEf
+   ```
+
+**Tip:** If you have multiple Airtable bases, make sure you're looking at the correct base for your volunteer database. The Base ID in the URL changes when you switch bases.
 
 ### 5. Load your credentials into your shell session
 
