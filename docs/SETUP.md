@@ -39,9 +39,26 @@ AIRTABLE_API_KEY=your_api_key_here
 AIRTABLE_BASE_ID=your_base_id_here
 ```
 
-To find your credentials:
-- **API Key**: Generate a personal access token at https://airtable.com/account/tokens
-- **Base ID**: Open your Airtable base in the browser; the base ID is in the URL: `https://airtable.com/BASE_ID/...`
+#### Getting your API Key
+
+1. Go to https://airtable.com/account/tokens
+2. Click **Create token** (or use an existing one)
+3. When creating a new token, grant these **required scopes**:
+   - `data.records:read` — to read volunteer records from Airtable
+   - `schema.bases:read` — to read base metadata (table schemas, field definitions)
+4. Under **Access**, select the base you want to sync (usually your volunteer database)
+5. Copy the token and paste it into your `.env` file as `AIRTABLE_API_KEY`
+
+**Why these scopes?**
+- `data.records:read`: dlt needs to read volunteer records, volunteer history, and other data tables
+- `schema.bases:read`: dlt discovers table and field definitions automatically; dbt uses schema info for modeling
+
+#### Getting your Base ID
+
+1. Open your Airtable base in a browser
+2. Look at the URL: `https://airtable.com/BASE_ID/tblXXXXX/...`
+3. Copy the `BASE_ID` portion (alphanumeric string after `airtable.com/`)
+4. Paste it into your `.env` file as `AIRTABLE_BASE_ID`
 
 ### 5. Load your credentials into your shell session
 
