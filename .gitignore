@@ -1,0 +1,22 @@
+# Environment variables (includes credentials)
+.env
+.env.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pipeline artifacts (generated, can be regenerated)
+artifacts/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
