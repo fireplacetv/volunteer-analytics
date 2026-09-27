@@ -11,33 +11,51 @@ sources:
         columns:
           - name: id
             description: Volunteer record ID
+            tests:
+              - not_null
+              - unique
 
       - name: projects
         description: List of projects
         columns:
           - name: id
             description: Project record ID
+            tests:
+              - not_null
+              - unique
 
       - name: project_volunteers
         description: Junction table linking volunteers to projects
         columns:
           - name: id
             description: Junction record ID
+            tests:
+              - not_null
+              - unique
 
       - name: events
         description: List of events
         columns:
           - name: id
             description: Event record ID
+            tests:
+              - not_null
+              - unique
 
       - name: event_attendance
         description: Junction table for event attendance
         columns:
           - name: id
             description: Attendance record ID
+            tests:
+              - not_null
+              - unique
 
-      - name: meeting_attendance
-        description: Meeting attendance records with feedback
+      - name: meeting_feedback
+        description: Meeting feedback records from attendees
         columns:
           - name: id
-            description: Attendance record ID
+            description: Feedback record ID
+            tests:
+              - not_null
+              - unique

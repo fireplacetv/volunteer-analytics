@@ -1,0 +1,116 @@
+version: 2
+
+models:
+  - name: stg_volunteers
+    description: One-to-one staging model for volunteer records from Airtable. Extracts all volunteer fields and renames them for clarity.
+    columns:
+      - name: id
+        description: Unique volunteer record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: Volunteer email address
+      - name: name
+        description: Volunteer full name
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+
+  - name: stg_projects
+    description: One-to-one staging model for project records from Airtable. Extracts all project fields and renames them for clarity.
+    columns:
+      - name: id
+        description: Unique project record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: project_id
+        description: Project identifier
+      - name: name
+        description: Project name
+      - name: description
+        description: Project description
+      - name: status
+        description: Current project status (e.g., active, inactive, completed)
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+
+  - name: stg_project_volunteers
+    description: Bridge table linking volunteers to projects. Extracted from multipleRecordLinks fields in Airtable. NOTE - Individual volunteer_id and project_id extraction from arrays is a Phase 1 TODO.
+    columns:
+      - name: id
+        description: Unique junction record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: join_id
+        description: Join identifier
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+
+  - name: stg_events
+    description: One-to-one staging model for event records from Airtable. Includes event metadata and creator information.
+    columns:
+      - name: id
+        description: Unique event record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: event_id
+        description: Event identifier
+      - name: name
+        description: Event name
+      - name: description
+        description: Event description
+      - name: location
+        description: Event location
+      - name: event_status
+        description: Event status (e.g., planned, in_progress, completed, cancelled)
+      - name: event_date
+        description: Date when the event occurs. NOTE - 2 null values detected in Airtable source data
+      - name: check_in_url
+        description: URL for event check-in
+      - name: qr_code
+        description: QR code for event check-in
+      - name: created_by_id
+        description: ID of user who created this event
+      - name: created_by_email
+        description: Email of user who created this event
+      - name: created_by_name
+        description: Name of user who created this event
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+
+  - name: stg_event_attendance
+    description: One-to-one staging model for event attendance records from Airtable. Tracks which volunteers attended which events.
+    columns:
+      - name: id
+        description: Unique attendance record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: attendance_id
+        description: Attendance identifier
+      - name: event_id
+        description: Reference to event record. NOTE - Contains string IDs that match events.id
+      - name: date
+        description: Date of attendance. NOTE - All values are not null
+        tests:
+          - not_null
+      - name: name
+        description: Name of attendee (may differ from volunteer name)
+      - name: email
+        description: Email of attendee
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+
+  - name: stg_meeting_feedback
+    description: One-to-one staging model for meeting feedback records from Airtable. Captures feedback from meeting attendees.
+    columns:
+      - name: id
+        description: Unique feedback record ID from Airtable
+        tests:
+          - not_null
+          - unique
+      - name: created_time
+        description: Timestamp when record was created in Airtable
