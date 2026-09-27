@@ -5,5 +5,6 @@ with source as (
 select
     id,
     created_time,
-    fields__project_id as project_id
+    last_modified,
+    json_extract_string(json_blob, '$.project_id') as project_id
 from source
