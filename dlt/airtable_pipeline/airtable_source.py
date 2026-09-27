@@ -157,7 +157,8 @@ def create_airtable_resource(
                 print(f"Updated cursor for {table_name}: {max_timestamp}")
             except Exception as e:
                 print(f"Warning: Could not save cursor to state file: {e}")
-        elif not max_timestamp and state_file:
+        elif not max_timestamp and not cursor and state_file:
+            # Only report missing field during full load (when cursor is None)
             print(f"Note: {table_name} has no 'Last Modified' field, skipping incremental tracking")
 
     return fetch_table
