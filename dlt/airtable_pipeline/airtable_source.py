@@ -180,6 +180,11 @@ def load_volunteer_data():
 
     load_info = pipeline.run(resources)
 
+    # After run, explicitly access state to ensure it's persisted
+    # This ensures any modifications made during resource execution are saved
+    final_state = pipeline.state
+    print(f"DEBUG: Final state after run: {dict(final_state)}")
+
     # Post-process to flatten linked records into clean bridge tables
     normalize_linked_records()
 
