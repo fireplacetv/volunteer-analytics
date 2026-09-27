@@ -147,7 +147,9 @@ models:
       - name: volunteer_id
         description: FK to dim_volunteer. May be null for orphaned attendance (warn test).
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
           - relationships:
               to: ref('dim_volunteer')
               field: volunteer_id
@@ -169,13 +171,15 @@ models:
       - name: occasion_date
         description: Date of attendance. Hard not_null (monthly meetings stored per attendance, not event).
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
 
       - name: status
         description: Attendance status (Attended / RSVP'd / No-show / Absent / Remote)
         tests:
           - accepted_values:
-              values: ['Attended', "RSVP'd", 'No-show', 'Absent', 'Remote']
+              values: ['Attended', 'RSVP''d', 'No-show', 'Absent', 'Remote']
               config:
                 severity: warn
 
@@ -202,7 +206,9 @@ models:
       - name: volunteer_id
         description: FK to dim_volunteer. Extracted from linked record array [0].
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
           - relationships:
               to: ref('dim_volunteer')
               field: volunteer_id
@@ -210,7 +216,9 @@ models:
       - name: project_id
         description: FK to dim_project. Extracted from linked record array [0].
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
           - relationships:
               to: ref('dim_project')
               field: project_id

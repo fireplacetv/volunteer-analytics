@@ -54,7 +54,7 @@ models:
           field: event_id
       - accepted_values:
           column_name: status
-          values: ['Attended', "RSVP'd", 'No-show', 'Absent', 'Remote']
+          values: ['Attended', 'RSVP''d', 'No-show', 'Absent', 'Remote']
           config:
             severity: warn
 
