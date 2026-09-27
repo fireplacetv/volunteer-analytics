@@ -16,8 +16,10 @@ def load_table_config():
 
 
 def get_db_path():
-    """Get absolute path to DuckDB file."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "volunteer_data.duckdb"))
+    """Get absolute path to DuckDB file from DUCKDB_PATH env var or default."""
+    default_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "volunteer_data.duckdb"))
+    db_path = os.getenv("DUCKDB_PATH", default_path)
+    return os.path.abspath(db_path)
 
 
 def get_pipelines_dir():
