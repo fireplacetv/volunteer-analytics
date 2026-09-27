@@ -21,18 +21,18 @@
 
 ---
 
-### 2. PII Exclusion (CRITICAL)
+### 2. PII Exclusion (DEFERRED TO PHASE 3)
 **Plan expects:** Exclude vetting_status, vetting_notes, internal_admin_notes at dlt level (lines 130-134)  
 **Code does:** Stores everything in json_blob; no filtering
 
-**Conflict:** PII reaches DuckDB. Plan requires it never to reach there.
+**Conflict:** Plan says exclude at dlt. Code doesn't. However, project is in dev (no public launch yet).
 
-**Resolution:** Implement dlt-level filtering (Task 0.1 in PHASE2_TODO.md)
-- Add `PII_EXCLUSIONS` dict in `airtable_source.py`
-- Filter fields before `json.dumps(record["fields"])`
-- Make configurable with `INCLUDE_PII` env var for future admin pipeline
+**Resolution:** DEFERRED — Move to Phase 3 (see ROADMAP_FUTURE.md)
+- Phase 2 marts already exclude PII via SELECT (volunteer_id only, no names/emails)
+- dlt-level filtering will be implemented before production launch
+- Makes sense: no public exposure risk until after Phase 3 when Evidence site is deployed
 
-**Status:** — Implementation task ready
+**Status:** — Deferred to Phase 3; not a Phase 2 blocker
 
 ---
 
@@ -46,7 +46,7 @@
 
 **Conflict:** Field names don't match plan. Some expected fields not extracted.
 
-**Resolution:** Expand staging models (Tasks 0.2–0.5 in PHASE2_TODO.md)
+**Resolution:** Expand staging models (Tasks 0.1–0.4 in PHASE2_TODO.md)
 - stg_projects: extract name, status, dates, stakeholder (currently only project_id)
 - stg_event_attendance: extract volunteer_id link, status (currently missing)
 - Rename/normalize fields to match plan schema
@@ -77,7 +77,7 @@
 
 **Conflict:** Field name mismatch. Plan may expect event category (type), not lifecycle status.
 
-**Resolution:** Verify in Airtable (Task 0.4 in PHASE2_TODO.md)
+**Resolution:** Verify in Airtable (Task 0.3 in PHASE2_TODO.md)
 - Check Events table field names and values
 - If field is called "type" with event categories → rename in staging to `event_type`
 - If called "status" with lifecycle values → clarify with plan/use differently
@@ -95,7 +95,7 @@
 - models.yml lists stg_volunteers columns as: id, email, name, created_time
 - Actual stg_volunteers.sql extracts ~30 columns (first_name, last_name, email, state, timezone, etc.)
 
-**Resolution:** Update models.yml (Task 0.5 in PHASE2_TODO.md)
+**Resolution:** Update models.yml (Task 0.4 in PHASE2_TODO.md)
 - Document all extracted fields
 - Mark deferred fields (Phase 3 metrics)
 - Link to plan schema tables for reference
@@ -109,11 +109,11 @@
 | Conflict | Severity | Plan says | Code has | Resolution | Task | Status |
 |----------|----------|-----------|----------|------------|------|--------|
 | Meeting Attendance | CRITICAL | 5 tables | 6 tables | Remove artifact | 0.0 | Ready |
-| PII at dlt | CRITICAL | Excluded | Not excluded | Filter in pipeline | 0.1 | Ready |
-| Staging incomplete | HIGH | Full schema | Partial schema | Expand stg_*.sql | 0.2-0.3 | Ready |
-| Field names | MEDIUM | event_type | event_status | Verify/rename | 0.4 | Pending |
-| models.yml | LOW | 5 tables documented | Outdated | Update docs | 0.5 | Ready |
-| Array expansion | INFO | Mart layer | Mart layer ✓ | Confirm design | 0.5 | Confirmed |
+| PII at dlt | DEFERRED | Excluded | Not excluded | Filter in Phase 3 | — | Deferred |
+| Staging incomplete | HIGH | Full schema | Partial schema | Expand stg_*.sql | 0.1–0.2 | Ready |
+| Field names | MEDIUM | event_type | event_status | Verify/rename | 0.3 | Pending |
+| models.yml | LOW | 5 tables documented | Outdated | Update docs | 0.4 | Ready |
+| Array expansion | INFO | Mart layer | Mart layer ✓ | Confirm design | 0.4 | Confirmed |
 
 ---
 
@@ -140,7 +140,19 @@ Once Tasks 0.0–0.5 are done (code cleanup + staging alignment), the plan's 5 m
 ## Reference
 
 - **Plan details:** See `phase-2-plan.md` (lines 39–158 for schemas)
-- **Implementation plan:** See `PHASE2_TODO.md` (13 tasks, 11–13h)
+- **Implementation plan:** See `PHASE2_TODO.md` (12 tasks, 10.5–11.5h)
+- **Future roadmap:** See `ROADMAP_FUTURE.md` (Phase 3+: PII filtering, metrics, docs, CI/CD)
 - **Conflict analysis:** See `phase2-conflicts.md` (original detailed report)
 
 **Next step:** Start Task 0.0 (remove Meeting Attendance), or begin in parallel if confident on other tasks.
+
+---
+
+## What Changed (Project in Dev)
+
+**PII conflict moved from CRITICAL to DEFERRED:**
+- Was flagged as must-fix for Phase 2 (per original plan)
+- But project hasn't launched yet; no public exposure risk
+- Marts already exclude PII via SELECT
+- dlt-level filtering will be done in Phase 3 before production launch
+- Pragmatic: focus Phase 2 on building marts correctly; harden for launch later
