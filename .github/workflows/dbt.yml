@@ -8,6 +8,12 @@ on:
       - 'dlt/**'
       - '.github/workflows/dbt.yml'
       - 'docker-compose.yml'
+  pull_request:
+    paths:
+      - 'dbt/**'
+      - 'dlt/**'
+      - '.github/workflows/dbt.yml'
+      - 'docker-compose.yml'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     env:
       DUCKDB_PATH: ${{ secrets.DUCKDB_PATH }}
 
@@ -67,23 +74,16 @@ jobs:
         with:
           path: ./dbt/target/
 
-      - name: Comment on PR with test results
+      - name: Comment on PR with CI status
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v6
         with:
           script: |
-            const fs = require('fs');
-            let message = '## dbt Test Results\n\n';
-            if (fs.existsSync('./dbt/target/run_results.json')) {
-              const results = JSON.parse(fs.readFileSync('./dbt/target/run_results.json', 'utf8'));
-              message += `- Models: ${results.stats.total_models} built\n`;
-              message += `- Tests: ${results.stats.total_tests} run\n`;
-              if (results.stats.failures > 0) {
-                message += `- ⚠️ Failures: ${results.stats.failures}\n`;
-              } else {
-                message += `- ✅ All tests passed\n`;
-              }
-            }
+            const conclusion = '${{ job.status }}';
+            const runUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            let message = conclusion === 'success'
+              ? '✅ dbt CI passed'
+              : `❌ dbt CI failed - [view details](${runUrl})`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
