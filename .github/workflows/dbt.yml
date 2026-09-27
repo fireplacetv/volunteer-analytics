@@ -82,12 +82,16 @@ jobs:
             let message = '## dbt Test Results\n\n';
             if (fs.existsSync('./dbt/target/run_results.json')) {
               const results = JSON.parse(fs.readFileSync('./dbt/target/run_results.json', 'utf8'));
-              message += `- Models: ${results.stats.total_models} built\n`;
-              message += `- Tests: ${results.stats.total_tests} run\n`;
-              if (results.stats.failures > 0) {
-                message += `- ⚠️ Failures: ${results.stats.failures}\n`;
+              if (results.stats) {
+                message += `- Models: ${results.stats.total_models} built\n`;
+                message += `- Tests: ${results.stats.total_tests} run\n`;
+                if (results.stats.failures > 0) {
+                  message += `- ⚠️ Failures: ${results.stats.failures}\n`;
+                } else {
+                  message += `- ✅ All tests passed\n`;
+                }
               } else {
-                message += `- ✅ All tests passed\n`;
+                message += '- ⚠️ Could not parse dbt results\n';
               }
             }
             github.rest.issues.createComment({
