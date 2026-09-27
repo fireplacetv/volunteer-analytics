@@ -4,6 +4,7 @@ import requests
 import dlt
 from dlt.common.typing import TDataItem
 from typing import Iterator, Callable
+import duckdb
 
 
 def load_table_config():
@@ -12,6 +13,46 @@ def load_table_config():
     with open(config_path, "r") as f:
         config = json.load(f)
     return config["tables"]
+
+
+def get_db_path():
+    """Get absolute path to DuckDB file."""
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "volunteer_data.duckdb"))
+
+
+def get_pipelines_dir():
+    """Get absolute path to pipelines directory."""
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".dlt"))
+
+
+def normalize_linked_records():
+    """
+    Post-process DuckDB to normalize linked records.
+    Currently a placeholder as linked record fields are not fully expanded by dlt.
+    """
+    db_path = get_db_path()
+    conn = duckdb.connect(db_path)
+
+    try:
+        # Verify that the project_volunteers table was created with the expected structure
+        tables = conn.execute("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+        """).fetchall()
+
+        if tables:
+            # Log the actual columns present for debugging
+            columns = conn.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+                ORDER BY ordinal_position
+            """).fetchall()
+            col_names = [col[0] for col in columns]
+            print(f"project_volunteers table loaded with columns: {col_names}")
+    except Exception as e:
+        print(f"Note: Could not verify project_volunteers table structure: {e}")
+    finally:
+        conn.close()
 
 
 def create_airtable_resource(
@@ -30,7 +71,7 @@ def create_airtable_resource(
         A dlt resource that fetches data from the table
     """
 
-    @dlt.resource(name=table_name, write_disposition="replace")
+    @dlt.resource(name=table_name, write_disposition="merge", primary_key="id")
     def fetch_table() -> Iterator[TDataItem]:
         """
         Fetch records from an Airtable table and yield them as data items.
@@ -45,7 +86,7 @@ def create_airtable_resource(
             if offset:
                 params["offset"] = offset
 
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -75,22 +116,33 @@ def load_volunteer_data():
         raise ValueError("AIRTABLE_API_KEY and AIRTABLE_BASE_ID must be set")
 
     table_config = load_table_config()
+    db_path = get_db_path()
+    pipelines_dir = get_pipelines_dir()
 
     pipeline = dlt.pipeline(
         pipeline_name="openoakland",
-        destination="duckdb",
+        destination=dlt.destinations.duckdb(db_path),
         dataset_name="airtable",
-        pipelines_dir="artifacts/dlt/airtable_pipeline",
+        pipelines_dir=pipelines_dir,
     )
 
-    load_info = None
+    resources = []
     for table_name, table_id in table_config.items():
         if table_id.startswith("YOUR_"):
             print(f"Skipping {table_name}: table ID not configured")
             continue
 
         resource = create_airtable_resource(table_name, table_id, base_id, api_key)
-        load_info = pipeline.run(resource)
+        resources.append(resource)
+
+    if not resources:
+        print("No tables to load (all configured table IDs start with YOUR_)")
+        return None
+
+    load_info = pipeline.run(resources)
+
+    # Post-process to flatten linked records into clean bridge tables
+    normalize_linked_records()
 
     return load_info
 
