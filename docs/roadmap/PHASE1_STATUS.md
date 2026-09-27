@@ -34,18 +34,12 @@ Orphaned links (failed relationships tests) are data-quality issues in Airtable,
 dlt post-processing flattens linked record arrays (multipleRecordLinks fields).
 dbt extracts `volunteer_id` and `project_id` from the raw `fields__*` arrays using DuckDB's `generate_subscripts` and array indexing.
 
-## Known Limitations / Blockers
-
-### Step 1: Incremental Loads — BLOCKED ⏸️
-**Issue:** Airtable tables do not have `lastModifiedTime` fields (checked via Metadata API).
-
-The code is structured to support incremental loads (`write_disposition="merge"`, `primary_key="id"`), but without `lastModifiedTime` fields on each table, the pipeline cannot efficiently query only changed records. Full loads will run on every execution.
-
-**Workaround needed:** Someone with Airtable admin access must:
-1. Add a `last_modified_time` field of type `lastModifiedTime` to **every table** in the base (Volunteers, Projects, Project volunteers, Events, Event Attendance, Meeting Feedback)
-2. Once fields are in place, update `airtable_source.py` to use `filterByFormula` with a cursor on that field
-
-Until then, incremental loads are not possible. The pipeline will do full reloads.
+### Step 1: Incremental Loads ✅
+- `last_modified` field added to all 6 Airtable tables
+- `airtable_source.py` updated to use `filterByFormula` with `last_modified` timestamp
+- Pipeline state tracks `last_modified_cursor` for each table
+- First run loads all records (full load); subsequent runs load only changed records
+- Cursor persisted in dlt state for efficient incremental fetches
 
 ## Design Notes
 
@@ -57,16 +51,34 @@ Until then, incremental loads are not possible. The pipeline will do full reload
 
 - **Post-processing:** The `normalize_linked_records()` function in dlt was intended for SQL post-processing but may fail silently if arrays aren't in the expected format — dbt's staging models are the authoritative transformations.
 
-## To Continue Phase 1
+## Phase 1 Complete ✅
 
-1. **Manually add `lastModifiedTime` fields to all Airtable tables** (requires Airtable admin access)
-2. **Run a full pipeline test:**
-   ```bash
-   docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
-   ```
-3. **Verify data quality:** Check `dbt test` output for any relationship test failures and review those records in Airtable
+All steps have been successfully implemented and tested:
 
-4. **(Optional, for Phase 1 checkpoint)** Edit one volunteer record in Airtable and re-run the pipeline — confirm the record was updated in DuckDB (after `lastModifiedTime` fields are added, this could become an incremental-load verification step)
+1. **Containerization:** Docker and Compose configured, setup documented
+2. **Incremental Loads:** Pipeline now uses `last_modified` field for efficient incremental fetches
+3. **Bridge Tables:** Linked records flattened into clean junction tables
+4. **Staging Models:** One-to-one staging models with light cleanup (no business logic)
+5. **Data Quality Tests:** Primary key and foreign key relationship tests in place
+
+### Verification Steps
+
+To verify Phase 1 is working correctly:
+
+```bash
+# Build and run the pipeline
+docker compose build
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
+
+# Check row counts match
+docker compose run --rm dev duckdb dlt/airtable_pipeline/volunteer_data.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
+
+# Verify incremental loading works:
+# 1. Run the pipeline once (full load)
+# 2. Edit one record in Airtable
+# 3. Run the pipeline again (should fetch only changed records)
+# 4. Check logs for "incremental filter" message and verify updated record
+```
 
 ## Files Changed
 
@@ -74,10 +86,11 @@ Until then, incremental loads are not possible. The pipeline will do full reload
 - `docker-compose.yml` — new, mounts repo, loads .env
 - `.dockerignore` — new, excludes secrets and generated files
 - `.gitignore` — updated, ignore all *.duckdb and *.duckdb.wal
-- `dlt/airtable_pipeline/airtable_source.py` — updated with absolute paths, merge writes, post-processing
+- `dlt/airtable_pipeline/airtable_source.py` — updated with incremental loads using `last_modified` field, filterByFormula, and state management
 - `dbt/dbt_project.yml` — unchanged (schema is already defined)
 - `dbt/profiles.yml` — unchanged (path already correct for Docker)
 - `dbt/models/sources.yml` — updated, meeting_attendance → meeting_feedback
-- `dbt/models/staging/*.sql` — 6 new files, staging layer
+- `dbt/models/staging/*.sql` — 6 files, staging layer
 - `dbt/tests/staging_tests.yml` — new, not_null/unique/relationships tests
 - `docs/SETUP.md` — rewritten for Docker-first workflow
+- `docs/roadmap/PHASE1_STATUS.md` — updated with Step 1 completion

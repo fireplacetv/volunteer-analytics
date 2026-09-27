@@ -113,6 +113,36 @@ Verify your API key and base ID are correct. API keys expire; generate a new one
 ### The DuckDB file is not being created
 Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py"` and check the output for errors. The file should appear at `dlt/airtable_pipeline/volunteer_data.duckdb` on your host machine.
 
+## Backfilling and Data History
+
+### How Incremental Loads Work
+
+The pipeline uses the `last_modified` timestamp field in Airtable to load only changed records on each run:
+- **First run:** Full load of all records from all tables
+- **Subsequent runs:** Only records with `last_modified` timestamp newer than the previous run are fetched
+- dlt's merge logic (`primary_key="id"`) ensures records are updated in-place, not duplicated
+
+### What Happens During a Backfill
+
+If you need to force a full reload of all records (e.g., after a schema change, or to verify data consistency), you can reset the incremental cursor:
+
+```bash
+# Delete the dlt state file to reset the cursor
+rm .dlt/pipelines/openoakland/state.json
+
+# Then run the pipeline — it will do a full load
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
+```
+
+**Important:** A backfill will update existing records in DuckDB (based on their `id`), not erase them. However, **if you delete and recreate the DuckDB file, all historical data is lost**. Plan data recovery strategies before doing full table replacements.
+
+### Data History Limitations (Phase 1)
+
+- DuckDB stores the **current state** of all Airtable records, not a full audit trail
+- Deleted records in Airtable remain in DuckDB (not actively removed)
+- If a record is modified retroactively in Airtable and `last_modified` is set to an earlier date, it will not be caught by incremental loads
+- **Phase 2 will add proper historical tracking** (SCD2 or dedicated history tables)
+
 ## Next steps
 
 The pipeline runs all tests on each run (Step 4 above). If a test fails, check `dbt test` output to see which records are missing required fields — these are data-quality issues in Airtable, not code issues. See `../phase1-plan.md` for more context on Phase 1 and beyond.
