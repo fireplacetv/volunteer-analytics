@@ -20,3 +20,5 @@ models:
   volunteer_analytics:
     staging:
       +materialized: view
+    marts:
+      +materialized: table
