@@ -44,10 +44,10 @@ def get_cursor_from_database(table_name: str, db_path: str) -> str:
         # dlt normalizes table names to snake_case
         normalized_name = normalize_table_name(table_name)
 
-        # DuckDB converts field names to lowercase with underscores, so "Last Modified" becomes "fields__last_modified"
+        # last_modified is extracted directly from Airtable's Last Modified field
         # Format as ISO 8601 string for Airtable filter formula
         result = conn.execute(f"""
-            SELECT strftime(MAX(fields__last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
+            SELECT strftime(MAX(last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
             FROM airtable.{normalized_name}
         """).fetchone()
         conn.close()
@@ -148,8 +148,9 @@ def create_airtable_resource(
                 total_records += 1
                 yield {
                     "id": record["id"],
-                    "fields": record["fields"],
+                    "json_blob": json.dumps(record["fields"]),
                     "created_time": record.get("createdTime"),
+                    "last_modified": record["fields"].get("Last Modified"),
                 }
 
             offset = data.get("offset")
