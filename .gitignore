@@ -10,7 +10,8 @@ __pycache__/
 *$py.class
 
 # Pipeline artifacts (generated, can be regenerated)
-artifacts/
+artifacts/*
+!artifacts/.gitkeep
 dlt/airtable_pipeline/airtable_tables.json
 dlt/airtable_pipeline/.dlt/
 *.duckdb
