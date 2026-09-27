@@ -202,15 +202,12 @@ models:
               to: ref('dim_volunteer')
               field: volunteer_id
 
-      - name: project_id
-        description: FK to dim_project. Extracted from linked record array [0].
+      - name: project_record_id
+        description: Airtable record ID of linked project (from array [0]). Links to dim_project.airtable_record_id.
         data_tests:
           - not_null:
               config:
                 severity: warn
-          - relationships:
-              to: ref('dim_project')
-              field: project_id
 
       - name: role
         description: Free-text role on project (e.g. UX Designer).
