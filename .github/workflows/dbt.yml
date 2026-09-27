@@ -13,15 +13,10 @@ on:
 jobs:
   dbt:
     runs-on: ubuntu-latest
-
-    services:
-      duckdb:
-        image: ghcr.io/duckdb/duckdb:latest
-        options: >-
-          --health-cmd "duckdb :memory: 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    permissions:
+      contents: write
+    env:
+      DUCKDB_PATH: ${{ secrets.DUCKDB_PATH }}
 
     steps:
       - uses: actions/checkout@v3
@@ -44,7 +39,6 @@ jobs:
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           python dlt/airtable_pipeline/airtable_source.py
 
