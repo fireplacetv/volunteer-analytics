@@ -1,0 +1,25 @@
+
+  
+  create view "openoakland"."stg_airtable_stg_airtable"."stg_project_volunteers__dbt_tmp" as (
+    select
+    id,
+    created_time,
+    json_extract_string(json_blob, '$.join_id') as join_id,
+    json_extract_string(json_blob, '$.volunteer_id[0]') as volunteer_id,
+    json_extract_string(json_blob, '$.project_id[0]') as project_record_id,
+    json_extract_string(json_blob, '$.role') as role,
+    try_cast(json_extract_string(json_blob, '$.commitment_date') as date) as commitment_date,
+    try_cast(json_extract_string(json_blob, '$.end_date') as date) as end_date,
+    json_extract_string(json_blob, '$.status') as status,
+    try_cast(json_extract_string(json_blob, '$.outreach_1_date') as date) as outreach_1_date,
+    try_cast(json_extract_string(json_blob, '$.outreach_2_date') as date) as outreach_2_date,
+    try_cast(json_extract_string(json_blob, '$.outreach_3_date') as date) as outreach_3_date,
+    json_extract_string(json_blob, '$.outreach_1_status') as outreach_1_status,
+    json_extract_string(json_blob, '$.outreach_2_status') as outreach_2_status,
+    json_extract_string(json_blob, '$.outreach_3_status') as outreach_3_status,
+    json_extract_string(json_blob, '$.declined') as declined,
+    json_extract_string(json_blob, '$.decline_reason') as decline_reason,
+    created_time as airtable_created_at,
+    created_time as airtable_modified_at
+from "openoakland"."raw_airtable"."project_volunteers"
+  );
