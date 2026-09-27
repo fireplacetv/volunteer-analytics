@@ -22,15 +22,17 @@ See `docs/SETUP.md` for setup instructions.
 │   ├── requirements.txt            # Python dependencies for dbt
 │   └── models/staging/             # dbt staging models (Phase 1+)
 ├── docs/
-│   └── SETUP.md                    # Setup and troubleshooting guide
-├── phase1-plan.md                  # Roadmap for Phase 1 work
+│   ├── SETUP.md                    # Setup and troubleshooting guide
+│   └── roadmap/                    # Phase planning and status
+│       ├── phase1-plan.md          # Roadmap for Phase 1 work
+│       └── PHASE1_STATUS.md        # Phase 1 implementation status
 └── README.md                       # This file
 ```
 
 ## Phases
 
-- **Phase 0** (current): Basic dlt pipeline loads Airtable tables into DuckDB
-- **Phase 1**: Containerize with Docker, incremental loads, bridge tables, dbt staging models
+- **Phase 0**: Basic dlt pipeline loads Airtable tables into DuckDB
+- **Phase 1** (current): Containerize with Docker, incremental loads, bridge tables, dbt staging models
 - **Phase 2**: dbt marts, metrics, and business logic
 - **Phase 3**: CI/CD, GitHub Actions automation, deployment
 
