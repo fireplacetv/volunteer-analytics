@@ -109,7 +109,11 @@ def create_airtable_resource(
             data = response.json()
             records = data.get("records", [])
 
-            for record in records:
+            for i, record in enumerate(records):
+                # Debug: print first record's structure for each table
+                if i == 0 and cursor is None:
+                    print(f"DEBUG {table_name} - First record fields keys: {list(record.get('fields', {}).keys())}")
+
                 # Track the maximum last_modified timestamp for next run
                 if "last_modified" in record.get("fields", {}):
                     ts = record["fields"]["last_modified"]
@@ -159,6 +163,7 @@ def load_volunteer_data():
     # Get the pipeline's state for tracking incremental cursors
     # pipeline.state is a dict-like object that dlt automatically persists
     state = pipeline.state
+    print(f"DEBUG: Pipeline state type: {type(state)}, contents: {dict(state)}")
 
     resources = []
     for table_name, table_id in table_config.items():
