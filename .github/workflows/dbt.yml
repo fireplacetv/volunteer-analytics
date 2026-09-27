@@ -55,11 +55,15 @@ jobs:
           cd dbt && dbt parse && dbt build
 
       - name: Run dbt tests
+        env:
+          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           cd dbt && dbt test
 
       - name: Generate dbt docs
         if: always()
+        env:
+          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           cd dbt && dbt docs generate
 
