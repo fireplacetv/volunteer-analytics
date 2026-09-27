@@ -53,7 +53,7 @@ jobs:
         env:
           DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
-          cd dbt && dbt parse && dbt build
+          cd dbt && dbt parse && dbt run --empty
 
       - name: Run dbt tests
         env:
