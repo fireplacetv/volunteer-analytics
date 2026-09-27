@@ -179,7 +179,7 @@ models:
         description: Attendance status (Attended / RSVP'd / No-show / Absent / Remote)
         tests:
           - accepted_values:
-              values: ['Attended', 'RSVP''d', 'No-show', 'Absent', 'Remote']
+              values: ["Attended", "RSVP'd", "No-show", "Absent", "Remote"]
               config:
                 severity: warn
 
