@@ -8,6 +8,12 @@ on:
       - 'dlt/**'
       - '.github/workflows/dbt.yml'
       - 'docker-compose.yml'
+  pull_request:
+    paths:
+      - 'dbt/**'
+      - 'dlt/**'
+      - '.github/workflows/dbt.yml'
+      - 'docker-compose.yml'
   workflow_dispatch:
 
 jobs:
