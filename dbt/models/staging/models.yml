@@ -6,7 +6,7 @@ models:
     columns:
       - name: id
         description: Volunteer record ID from Airtable (primary key)
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: created_time
@@ -37,7 +37,7 @@ models:
     columns:
       - name: id
         description: Airtable record ID (uniqueness key, not human-readable)
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: created_time
@@ -66,7 +66,7 @@ models:
     columns:
       - name: id
         description: Airtable record ID (primary key)
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: created_time
@@ -81,7 +81,7 @@ models:
     columns:
       - name: id
         description: Airtable record ID (primary key)
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: created_time
@@ -104,7 +104,7 @@ models:
     columns:
       - name: id
         description: Airtable record ID (primary key)
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: created_time
@@ -119,7 +119,7 @@ models:
         description: Volunteer ID (links to dim_volunteer; may be null for orphaned records)
       - name: date
         description: Date of attendance (hard not_null test in fct_attendance for monthly meeting tracking)
-        tests:
+        data_tests:
           - not_null:
               config:
                 severity: warn

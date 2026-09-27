@@ -8,13 +8,13 @@ models:
     columns:
       - name: volunteer_id
         description: Airtable volunteer record ID. Primary key.
-        tests:
+        data_tests:
           - not_null
           - unique
 
       - name: status
         description: Pending / Active / Inactive / Alumni
-        tests:
+        data_tests:
           - accepted_values:
               values: ['Pending', 'Active', 'Inactive', 'Alumni']
               config:
@@ -54,7 +54,7 @@ models:
     columns:
       - name: project_id
         description: Airtable project auto-ID. Primary key, human-readable.
-        tests:
+        data_tests:
           - not_null
           - unique
 
@@ -69,7 +69,7 @@ models:
 
       - name: status
         description: Project status (Intake / Active / Complete / On hold)
-        tests:
+        data_tests:
           - accepted_values:
               values: ['Intake', 'Active', 'Complete', 'On hold']
               config:
@@ -100,7 +100,7 @@ models:
     columns:
       - name: event_id
         description: Airtable event auto-ID. Primary key. 0 = all monthly meetings.
-        tests:
+        data_tests:
           - not_null
           - unique
 
@@ -112,7 +112,7 @@ models:
 
       - name: event_type
         description: Event type (Monthly meeting / CityCamp / Community event / Other)
-        tests:
+        data_tests:
           - accepted_values:
               values: ['Monthly meeting', 'CityCamp', 'Community event', 'Other']
               config:
@@ -140,20 +140,20 @@ models:
     columns:
       - name: attendance_id
         description: Airtable attendance record ID. Primary key.
-        tests:
+        data_tests:
           - not_null
           - unique
 
       - name: volunteer_id
         description: FK to dim_volunteer. May be null for orphaned attendance (warn test).
-        tests:
+        data_tests:
           - relationships:
               to: ref('dim_volunteer')
               field: volunteer_id
 
       - name: event_id
         description: FK to dim_event. 0 = monthly meeting (all monthly meetings share this pseudo-event).
-        tests:
+        data_tests:
           - not_null
           - relationships:
               to: ref('dim_event')
@@ -167,7 +167,7 @@ models:
 
       - name: occasion_date
         description: Date of attendance. Hard not_null (monthly meetings stored per attendance, not event).
-        tests:
+        data_tests:
           - not_null:
               config:
                 severity: warn
@@ -188,13 +188,13 @@ models:
     columns:
       - name: join_id
         description: Airtable project_volunteers record ID. Primary key.
-        tests:
+        data_tests:
           - not_null
           - unique
 
       - name: volunteer_id
         description: FK to dim_volunteer. Extracted from linked record array [0].
-        tests:
+        data_tests:
           - not_null:
               config:
                 severity: warn
@@ -204,7 +204,7 @@ models:
 
       - name: project_id
         description: FK to dim_project. Extracted from linked record array [0].
-        tests:
+        data_tests:
           - not_null:
               config:
                 severity: warn
@@ -223,7 +223,7 @@ models:
 
       - name: status
         description: Current status (Active / Completed / Departed)
-        tests:
+        data_tests:
           - accepted_values:
               values: ['Active', 'Completed', 'Departed']
               config:
