@@ -2,8 +2,6 @@ with source as (
     select * from {{ source('airtable', 'event_attendance') }}
 )
 
-just error out
-
 select
     id,
     created_time,
