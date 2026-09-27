@@ -3,7 +3,7 @@ select
     created_time,
     json_extract_string(json_blob, '$.join_id') as join_id,
     json_extract_string(json_blob, '$.volunteer_id[0]') as volunteer_id,
-    json_extract_string(json_blob, '$.project_id[0]') as project_id,
+    json_extract_string(json_blob, '$.project_id[0]') as project_record_id,
     json_extract_string(json_blob, '$.role') as role,
     try_cast(json_extract_string(json_blob, '$.commitment_date') as date) as commitment_date,
     try_cast(json_extract_string(json_blob, '$.end_date') as date) as end_date,

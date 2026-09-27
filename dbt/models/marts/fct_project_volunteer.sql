@@ -6,7 +6,7 @@ with_derived as (
     select
         join_id,
         volunteer_id,
-        project_id,
+        project_record_id,
         role,
         commitment_date,
         end_date,
