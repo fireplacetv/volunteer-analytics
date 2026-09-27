@@ -105,12 +105,22 @@ models:
         description: Timestamp when record was created in Airtable
 
   - name: stg_meeting_feedback
-    description: One-to-one staging model for meeting feedback records from Airtable. Captures feedback from meeting attendees.
+    description: One-to-one staging model for meeting attendance records from Airtable. Captures attendance and feedback from meeting attendees.
     columns:
       - name: id
-        description: Unique feedback record ID from Airtable
+        description: Unique attendance record ID from Airtable
         tests:
           - not_null
           - unique
+      - name: date
+        description: Date of attendance
+      - name: name
+        description: Name of attendee
+      - name: email
+        description: Email of attendee
+      - name: feedback
+        description: Feedback provided by attendee
+      - name: notes
+        description: Additional notes about the attendance
       - name: created_time
         description: Timestamp when record was created in Airtable
