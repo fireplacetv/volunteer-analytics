@@ -86,6 +86,7 @@ def create_airtable_resource(
         headers = {"Authorization": f"Bearer {api_key}"}
         offset = None
         max_timestamp = None
+        total_records = 0
 
         # Load cursor from state file
         cursor = None
@@ -119,6 +120,7 @@ def create_airtable_resource(
             records = data.get("records", [])
 
             for i, record in enumerate(records):
+                total_records += 1
                 # Track the maximum last_modified timestamp for next run
                 # Airtable field name is "Last Modified" (capitalized with space)
                 if "Last Modified" in record.get("fields", {}):
@@ -135,6 +137,8 @@ def create_airtable_resource(
             offset = data.get("offset")
             if not offset:
                 break
+
+        print(f"Loaded {total_records} records from {table_name}")
 
         # Save the cursor to state file for the next run
         if max_timestamp and state_file:
