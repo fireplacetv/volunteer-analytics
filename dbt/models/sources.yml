@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: airtable
     description: Raw data from Airtable
-    database: volunteer_data
+    database: openoakland
     schema: airtable
     tables:
       - name: volunteers
