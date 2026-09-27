@@ -67,14 +67,14 @@ docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_sourc
 ```
 
 This single command:
-- Loads data from Airtable into DuckDB (`dlt/airtable_pipeline/volunteer_data.duckdb`)
+- Loads data from Airtable into DuckDB (`artifacts/openoakland.duckdb`)
 - Transforms it with dbt staging models
 - Runs automated tests on all staging models
 
 ### 5. Verify the pipeline worked
 
 ```bash
-docker compose run --rm dev duckdb dlt/airtable_pipeline/volunteer_data.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
+docker compose run --rm dev duckdb artifacts/openoakland.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
 ```
 
 If you see a row count, the pipeline succeeded.
@@ -93,7 +93,7 @@ Then you can run dlt, dbt, and duckdb commands directly:
 python dlt/airtable_pipeline/airtable_source.py
 dbt run
 dbt test
-duckdb dlt/airtable_pipeline/volunteer_data.duckdb
+duckdb artifacts/openoakland.duckdb
 ```
 
 ## Troubleshooting
@@ -111,7 +111,7 @@ Make sure your `.env` file exists in the repo root and contains both variables. 
 Verify your API key and base ID are correct. API keys expire; generate a new one at https://airtable.com/account/tokens if needed.
 
 ### The DuckDB file is not being created
-Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py"` and check the output for errors. The file should appear at `dlt/airtable_pipeline/volunteer_data.duckdb` on your host machine.
+Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py"` and check the output for errors. The file should appear at `artifacts/openoakland.duckdb` on your host machine.
 
 ## Backfilling and Data History
 

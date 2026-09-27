@@ -6,7 +6,7 @@
 - `Dockerfile` with Python 3.11, pinned dlt/dbt/requests versions
 - `docker-compose.yml` mounting repo volume, loading .env credentials
 - `.dockerignore` to exclude secrets, venv, git, artifacts
-- DuckDB file persisted at `dlt/airtable_pipeline/volunteer_data.duckdb`
+- DuckDB file persisted at `artifacts/openoakland.duckdb`
 - `docs/SETUP.md` rewritten for Docker-first workflow
 
 **Checkpoint:** Run `docker compose build && docker compose run --rm dev bash -c "dbt run && dbt test"` from a fresh clone (on a machine with only Docker installed) — should pass.
@@ -47,7 +47,7 @@ dbt extracts `volunteer_id` and `project_id` from the raw `fields__*` arrays usi
 
 - **Bridge Table PKs:** The `stg_project_volunteers` model explodes the linked record arrays by index, creating one row per link. If the same volunteer is listed twice in the volunteer_id array for a project, that will be preserved (and may fail unique tests — this is a data-quality issue in Airtable).
 
-- **Docker Path:** The DuckDB file path is absolute: `dlt/airtable_pipeline/volunteer_data.duckdb`, resolved relative to the script. This works both on the host and inside the container (due to volume mounts at `/workspace`).
+- **Docker Path:** The DuckDB file path is relative: `artifacts/openoakland.duckdb`, resolved relative to the project root. This works both on the host and inside the container (due to volume mounts at `/workspace`).
 
 - **Post-processing:** The `normalize_linked_records()` function in dlt was intended for SQL post-processing but may fail silently if arrays aren't in the expected format — dbt's staging models are the authoritative transformations.
 
@@ -71,7 +71,7 @@ docker compose build
 docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
 
 # Check row counts match
-docker compose run --rm dev duckdb dlt/airtable_pipeline/volunteer_data.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
+docker compose run --rm dev duckdb artifacts/openoakland.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
 
 # Verify incremental loading works:
 # 1. Run the pipeline once (full load)
