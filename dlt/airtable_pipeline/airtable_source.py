@@ -4,7 +4,7 @@ import requests
 import dlt
 from dlt.common.typing import TDataItem
 from typing import Iterator, Callable
-from dlt.destinations.duckdb import duckdb
+import duckdb
 
 
 def load_table_config():
@@ -17,48 +17,42 @@ def load_table_config():
 
 def get_db_path():
     """Get absolute path to DuckDB file."""
-    return os.path.join(os.path.dirname(__file__), "volunteer_data.duckdb")
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "volunteer_data.duckdb"))
 
 
 def get_pipelines_dir():
     """Get absolute path to pipelines directory."""
-    return os.path.join(os.path.dirname(__file__), ".dlt")
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".dlt"))
 
 
 def normalize_linked_records():
     """
-    Post-process DuckDB to flatten linked record arrays into bridge tables.
-    Extracts volunteer_id and project_id from the project_volunteers junction table.
+    Post-process DuckDB to normalize linked records.
+    Currently a placeholder as linked record fields are not fully expanded by dlt.
     """
     db_path = get_db_path()
     conn = duckdb.connect(db_path)
 
-    # Extract volunteer and project IDs from the project_volunteers linked record fields
     try:
-        conn.execute("""
-            CREATE OR REPLACE TABLE airtable.project_volunteers_normalized AS
-            SELECT
-                pv.id,
-                pv.created_time,
-                pv.fields__join_id as join_id,
-                pv.fields__volunteer_id[idx] as volunteer_id,
-                pv.fields__project_id[idx] as project_id
-            FROM (
-                SELECT id, created_time, fields__volunteer_id, fields__project_id
-                FROM airtable.project_volunteers
-                WHERE fields__volunteer_id IS NOT NULL AND fields__project_id IS NOT NULL
-            ) as pv,
-            LATERAL GENERATE_SUBSCRIPTS(pv.fields__volunteer_id, 1) AS t(idx)
-            WHERE idx <= LEAST(
-                CARDINALITY(pv.fields__volunteer_id),
-                CARDINALITY(pv.fields__project_id)
-            )
-        """)
-    except Exception as e:
-        # If the above query fails (e.g., fields are not arrays), just skip
-        print(f"Note: Could not normalize project_volunteers linked records: {e}")
+        # Verify that the project_volunteers table was created with the expected structure
+        tables = conn.execute("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+        """).fetchall()
 
-    conn.close()
+        if tables:
+            # Log the actual columns present for debugging
+            columns = conn.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+                ORDER BY ordinal_position
+            """).fetchall()
+            col_names = [col[0] for col in columns]
+            print(f"project_volunteers table loaded with columns: {col_names}")
+    except Exception as e:
+        print(f"Note: Could not verify project_volunteers table structure: {e}")
+    finally:
+        conn.close()
 
 
 def create_airtable_resource(
@@ -92,7 +86,7 @@ def create_airtable_resource(
             if offset:
                 params["offset"] = offset
 
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=30)
             response.raise_for_status()
 
             data = response.json()
@@ -127,12 +121,11 @@ def load_volunteer_data():
 
     pipeline = dlt.pipeline(
         pipeline_name="openoakland",
-        destination=duckdb(db_path),
+        destination=dlt.destinations.duckdb(db_path),
         dataset_name="airtable",
         pipelines_dir=pipelines_dir,
     )
 
-    load_info = None
     resources = []
     for table_name, table_id in table_config.items():
         if table_id.startswith("YOUR_"):
@@ -142,8 +135,11 @@ def load_volunteer_data():
         resource = create_airtable_resource(table_name, table_id, base_id, api_key)
         resources.append(resource)
 
-    if resources:
-        load_info = pipeline.run(resources)
+    if not resources:
+        print("No tables to load (all configured table IDs start with YOUR_)")
+        return None
+
+    load_info = pipeline.run(resources)
 
     # Post-process to flatten linked records into clean bridge tables
     normalize_linked_records()
