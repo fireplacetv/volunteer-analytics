@@ -59,7 +59,7 @@ def normalize_linked_records():
 
 
 def create_airtable_resource(
-    table_name: str, table_id: str, base_id: str, api_key: str, state: dict = None
+    table_name: str, table_id: str, base_id: str, api_key: str, state_file: str = None
 ) -> Callable[[], Iterator[TDataItem]]:
     """
     Factory function to create a resource for a specific Airtable table.
@@ -69,7 +69,7 @@ def create_airtable_resource(
         table_id: Airtable Table ID (tblXXXXXXXXXXXXXX format)
         base_id: Airtable Base ID (appXXXXXXXXXXXXXX format)
         api_key: Airtable API key
-        state: Pipeline state dict for tracking incremental cursors
+        state_file: Path to JSON file for storing incremental cursors
 
     Returns:
         A dlt resource that fetches data from the table
@@ -87,8 +87,15 @@ def create_airtable_resource(
         offset = None
         max_timestamp = None
 
-        # Get the cursor for incremental loading from state
-        cursor = state.get(table_name, {}).get("last_modified_cursor") if state else None
+        # Load cursor from state file
+        cursor = None
+        if state_file and os.path.exists(state_file):
+            try:
+                with open(state_file, "r") as f:
+                    state_data = json.load(f)
+                    cursor = state_data.get(table_name, {}).get("last_modified_cursor")
+            except Exception as e:
+                print(f"Warning: Could not load state from {state_file}: {e}")
 
         while True:
             params = {"pageSize": 100}
@@ -130,12 +137,23 @@ def create_airtable_resource(
             if not offset:
                 break
 
-        # Update the cursor in state for the next run
-        if max_timestamp and state is not None:
-            if table_name not in state:
-                state[table_name] = {}
-            state[table_name]["last_modified_cursor"] = max_timestamp
-            print(f"Updated cursor for {table_name}: {max_timestamp}")
+        # Save the cursor to state file for the next run
+        if max_timestamp and state_file:
+            try:
+                state_data = {}
+                if os.path.exists(state_file):
+                    with open(state_file, "r") as f:
+                        state_data = json.load(f)
+
+                if table_name not in state_data:
+                    state_data[table_name] = {}
+                state_data[table_name]["last_modified_cursor"] = max_timestamp
+
+                with open(state_file, "w") as f:
+                    json.dump(state_data, f, indent=2)
+                print(f"Updated cursor for {table_name}: {max_timestamp}")
+            except Exception as e:
+                print(f"Warning: Could not save cursor to state file: {e}")
 
     return fetch_table
 
@@ -153,6 +171,9 @@ def load_volunteer_data():
     db_path = get_db_path()
     pipelines_dir = get_pipelines_dir()
 
+    # Use a dedicated state file for tracking incremental cursors
+    state_file = os.path.join(pipelines_dir, "airtable_incremental_state.json")
+
     pipeline = dlt.pipeline(
         pipeline_name="openoakland",
         destination=dlt.destinations.duckdb(db_path),
@@ -160,18 +181,13 @@ def load_volunteer_data():
         pipelines_dir=pipelines_dir,
     )
 
-    # Get the pipeline's state for tracking incremental cursors
-    # pipeline.state is a dict-like object that dlt automatically persists
-    state = pipeline.state
-    print(f"DEBUG: Pipeline state type: {type(state)}, contents: {dict(state)}")
-
     resources = []
     for table_name, table_id in table_config.items():
         if table_id.startswith("YOUR_"):
             print(f"Skipping {table_name}: table ID not configured")
             continue
 
-        resource = create_airtable_resource(table_name, table_id, base_id, api_key, state)
+        resource = create_airtable_resource(table_name, table_id, base_id, api_key, state_file)
         resources.append(resource)
 
     if not resources:
@@ -179,11 +195,6 @@ def load_volunteer_data():
         return None
 
     load_info = pipeline.run(resources)
-
-    # After run, explicitly access state to ensure it's persisted
-    # This ensures any modifications made during resource execution are saved
-    final_state = pipeline.state
-    print(f"DEBUG: Final state after run: {dict(final_state)}")
 
     # Post-process to flatten linked records into clean bridge tables
     normalize_linked_records()
