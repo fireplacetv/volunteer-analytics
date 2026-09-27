@@ -23,4 +23,4 @@ models:
       +schema: stg_airtable
     marts:
       +materialized: table
-      +schema: marts
+      +schema: farts
