@@ -5,7 +5,6 @@ import dlt
 from dlt.common.typing import TDataItem
 from typing import Iterator, Callable
 import duckdb
-from datetime import datetime
 
 
 def load_table_config():
@@ -26,6 +25,39 @@ def get_db_path():
 def get_pipelines_dir():
     """Get absolute path to pipelines directory."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), ".dlt"))
+
+
+def normalize_table_name(table_name: str) -> str:
+    """Normalize table name to snake_case like dlt does."""
+    return table_name.lower().replace(" ", "_")
+
+
+def get_cursor_from_database(table_name: str, db_path: str) -> str:
+    """
+    Get the cursor (latest Last Modified timestamp) from the database for a table.
+    Returns the max Last Modified timestamp in ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sssZ),
+    or None if table doesn't exist or has no records.
+    """
+    try:
+        conn = duckdb.connect(db_path)
+
+        # dlt normalizes table names to snake_case
+        normalized_name = normalize_table_name(table_name)
+
+        # DuckDB converts field names to lowercase with underscores, so "Last Modified" becomes "fields__last_modified"
+        # Format as ISO 8601 string for Airtable filter formula
+        result = conn.execute(f"""
+            SELECT strftime(MAX(fields__last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
+            FROM airtable.{normalized_name}
+        """).fetchone()
+        conn.close()
+
+        if result and result[0]:
+            return result[0]
+        return None
+    except Exception as e:
+        # Table doesn't exist yet (first run) or error querying
+        return None
 
 
 def normalize_linked_records():
@@ -59,7 +91,7 @@ def normalize_linked_records():
 
 
 def create_airtable_resource(
-    table_name: str, table_id: str, base_id: str, api_key: str, state: dict = None
+    table_name: str, table_id: str, base_id: str, api_key: str, db_path: str
 ) -> Callable[[], Iterator[TDataItem]]:
     """
     Factory function to create a resource for a specific Airtable table.
@@ -69,7 +101,7 @@ def create_airtable_resource(
         table_id: Airtable Table ID (tblXXXXXXXXXXXXXX format)
         base_id: Airtable Base ID (appXXXXXXXXXXXXXX format)
         api_key: Airtable API key
-        state: Pipeline state dict for tracking incremental cursors
+        db_path: Path to DuckDB database for reading cursor state
 
     Returns:
         A dlt resource that fetches data from the table
@@ -81,14 +113,17 @@ def create_airtable_resource(
         Fetch records from an Airtable table with incremental loading.
         Uses the table ID (not table name) in the API endpoint.
         Filters by last_modified timestamp to only fetch changed records.
+        Cursor is loaded from the database (max timestamp of already-loaded records).
         """
         url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
         headers = {"Authorization": f"Bearer {api_key}"}
         offset = None
-        max_timestamp = None
+        total_records = 0
 
-        # Get the cursor for incremental loading from state
-        cursor = state.get(table_name, {}).get("last_modified_cursor") if state else None
+        # Load cursor from database (max Last Modified timestamp)
+        cursor = get_cursor_from_database(table_name, db_path)
+        if cursor:
+            print(f"Loaded cursor for {table_name} from database: {cursor}")
 
         while True:
             params = {"pageSize": 100}
@@ -97,9 +132,9 @@ def create_airtable_resource(
 
             # Add filter by last_modified if we have a cursor
             if cursor:
-                # Airtable filterByFormula: find records where last_modified > cursor
-                params["filterByFormula"] = f"{{last_modified}} > '{cursor}'"
-                print(f"Fetching {table_name} with incremental filter: last_modified > {cursor}")
+                # Airtable filterByFormula: find records where Last Modified > cursor
+                params["filterByFormula"] = f"{{Last Modified}} > '{cursor}'"
+                print(f"Fetching {table_name} with incremental filter: Last Modified > {cursor}")
             else:
                 print(f"Fetching {table_name} with full load (first run or no prior state)")
 
@@ -110,12 +145,7 @@ def create_airtable_resource(
             records = data.get("records", [])
 
             for record in records:
-                # Track the maximum last_modified timestamp for next run
-                if "last_modified" in record.get("fields", {}):
-                    ts = record["fields"]["last_modified"]
-                    if max_timestamp is None or ts > max_timestamp:
-                        max_timestamp = ts
-
+                total_records += 1
                 yield {
                     "id": record["id"],
                     "fields": record["fields"],
@@ -126,12 +156,8 @@ def create_airtable_resource(
             if not offset:
                 break
 
-        # Update the cursor in state for the next run
-        if max_timestamp and state is not None:
-            if table_name not in state:
-                state[table_name] = {}
-            state[table_name]["last_modified_cursor"] = max_timestamp
-            print(f"Updated cursor for {table_name}: {max_timestamp}")
+        print(f"Loaded {total_records} records from {table_name}")
+        # Cursor is automatically updated in database when dlt saves records
 
     return fetch_table
 
@@ -156,19 +182,13 @@ def load_volunteer_data():
         pipelines_dir=pipelines_dir,
     )
 
-    # Get the pipeline's state for tracking incremental cursors
-    try:
-        state = pipeline.state
-    except Exception:
-        state = {}
-
     resources = []
     for table_name, table_id in table_config.items():
         if table_id.startswith("YOUR_"):
             print(f"Skipping {table_name}: table ID not configured")
             continue
 
-        resource = create_airtable_resource(table_name, table_id, base_id, api_key, state)
+        resource = create_airtable_resource(table_name, table_id, base_id, api_key, db_path)
         resources.append(resource)
 
     if not resources:
@@ -176,12 +196,6 @@ def load_volunteer_data():
         return None
 
     load_info = pipeline.run(resources)
-
-    # Persist the updated state back to the pipeline
-    try:
-        pipeline.state = state
-    except Exception as e:
-        print(f"Note: Could not persist state: {e}")
 
     # Post-process to flatten linked records into clean bridge tables
     normalize_linked_records()
