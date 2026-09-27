@@ -30,13 +30,15 @@ def get_pipelines_dir():
 def get_cursor_from_database(table_name: str, db_path: str) -> str:
     """
     Get the cursor (latest Last Modified timestamp) from the database for a table.
-    Returns the max Last Modified timestamp, or None if table doesn't exist or has no records.
+    Returns the max Last Modified timestamp in ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sssZ),
+    or None if table doesn't exist or has no records.
     """
     try:
         conn = duckdb.connect(db_path)
         # DuckDB converts field names to lowercase with underscores, so "Last Modified" becomes "fields__last_modified"
+        # Format as ISO 8601 string for Airtable filter formula
         result = conn.execute(f"""
-            SELECT MAX(fields__last_modified)
+            SELECT strftime(MAX(fields__last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
             FROM airtable."{table_name}"
         """).fetchone()
         conn.close()
