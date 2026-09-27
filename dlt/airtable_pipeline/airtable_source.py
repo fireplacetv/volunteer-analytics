@@ -157,10 +157,8 @@ def load_volunteer_data():
     )
 
     # Get the pipeline's state for tracking incremental cursors
-    try:
-        state = pipeline.state
-    except Exception:
-        state = {}
+    # pipeline.state is a dict-like object that dlt automatically persists
+    state = pipeline.state
 
     resources = []
     for table_name, table_id in table_config.items():
@@ -176,12 +174,6 @@ def load_volunteer_data():
         return None
 
     load_info = pipeline.run(resources)
-
-    # Persist the updated state back to the pipeline
-    try:
-        pipeline.state = state
-    except Exception as e:
-        print(f"Note: Could not persist state: {e}")
 
     # Post-process to flatten linked records into clean bridge tables
     normalize_linked_records()
