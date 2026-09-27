@@ -14,8 +14,9 @@ artifacts/
 dlt/airtable_pipeline/airtable_tables.json
 *.duckdb
 *.duckdb.wal
-dbt/target
-dbt/logs
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
 
 # IDE
 .vscode/
