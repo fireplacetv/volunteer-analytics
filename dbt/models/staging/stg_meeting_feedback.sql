@@ -1,5 +1,5 @@
 with source as (
-    select * from {{ source('airtable', 'meeting_feedback') }}
+    select * from {{ source('airtable', 'meeting_attendance') }}
 )
 
 select

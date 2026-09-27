@@ -1,5 +1,5 @@
 with source as (
-    select * from "volunteer_data"."airtable"."meeting_feedback"
+    select * from "volunteer_data"."airtable"."meeting_attendance"
 )
 
 select

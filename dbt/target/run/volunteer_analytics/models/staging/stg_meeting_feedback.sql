@@ -2,7 +2,7 @@
   
   create view "volunteer_data"."airtable"."stg_meeting_feedback__dbt_tmp" as (
     with source as (
-    select * from "volunteer_data"."airtable"."meeting_feedback"
+    select * from "volunteer_data"."airtable"."meeting_attendance"
 )
 
 select

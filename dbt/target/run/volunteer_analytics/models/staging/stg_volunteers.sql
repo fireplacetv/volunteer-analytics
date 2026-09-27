@@ -28,7 +28,6 @@ select
     fields__prior_volunteer_experience as prior_volunteer_experience,
     fields__board_leadership_experience as board_leadership_experience,
     fields__grant_writing_experience as grant_writing_experience,
-    fields__tech_skills as tech_skills,
     fields__tech_languages_tools as tech_languages_tools,
     fields__tech_experience_level as tech_experience_level,
     fields__project_interests as project_interests,
