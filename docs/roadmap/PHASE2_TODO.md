@@ -2,9 +2,11 @@
 
 **Branch:** `phase-2/marts-and-metrics`
 
-**Target:** Build dimensional and fact models from staging, with PII excluded and tests in place.
+**Target:** Build dimensional and fact models from staging, tested and documented.
 
 **Ground truth:** The phase-2-plan.md is correct. Code must be updated to match the plan, not vice versa.
+
+**Note:** PII filtering (dlt-level) deferred to Phase 3 (before launch). Project is in dev; public exposure risk is future. See ROADMAP_FUTURE.md.
 
 ---
 
@@ -27,25 +29,7 @@
 
 ---
 
-### [ ] Task 0.1: Implement dlt-level PII filtering
-**File:** `dlt/airtable_pipeline/airtable_source.py`
-
-Add field-level exclusion before json_blob serialization:
-- **Volunteers:** exclude first_name, last_name, email, pronouns, age_range, city, linkedin, github, website_portfolio, slack_handle, accommodations, other_notes, vetting_status, vesting_notes, internal_admin_notes
-- **Event attendance:** exclude Name, Email
-- **Project volunteers:** exclude notes
-
-**Design:** Make configurable via `INCLUDE_PII` env var for future admin analysis (separate restricted pipeline if demographic analysis is needed).
-
-**Why:** PII never reaches DuckDB. No accidental exposure risk. Cleaner than mart-layer-only filtering.
-
-**Estimate:** 0.5h
-
-**Status:** —
-
----
-
-### [ ] Task 0.2: Expand stg_projects.sql
+### [ ] Task 0.1: Expand stg_projects.sql
 **File:** `dbt/models/staging/stg_projects.sql`
 
 Extract from json_blob:
@@ -67,7 +51,7 @@ Keep: `id`, `created_time`, `last_modified`
 
 ---
 
-### [ ] Task 0.3: Expand stg_event_attendance.sql
+### [ ] Task 0.2: Expand stg_event_attendance.sql
 **File:** `dbt/models/staging/stg_event_attendance.sql`
 
 Extract:
@@ -89,7 +73,7 @@ Keep: `id`, `attendance_id`, `event_id`, `created_time`, `last_modified`
 
 ---
 
-### [ ] Task 0.4: Confirm Airtable schema for Event attendance
+### [ ] Task 0.3: Confirm Airtable schema for Event attendance
 **Manual verification:**
 
 1. In Airtable Event attendance table, confirm:
@@ -107,7 +91,7 @@ Keep: `id`, `attendance_id`, `event_id`, `created_time`, `last_modified`
 
 ---
 
-### [ ] Task 0.5: Update dbt/models/staging/models.yml
+### [ ] Task 0.4: Update dbt/models/staging/models.yml
 **File:** `dbt/models/staging/models.yml`
 
 Rewrite to match actual staging SQL:
@@ -157,7 +141,7 @@ from source
 
 **Estimate:** 0.5h
 
-**Depends on:** Task 0.1, 0.5
+**Depends on:** Task 0.4
 
 **Status:** —
 
@@ -195,7 +179,7 @@ from source
 
 **Estimate:** 0.5h
 
-**Depends on:** Task 0.2, 0.5
+**Depends on:** Task 0.1, 0.4
 
 **Status:** —
 
@@ -257,7 +241,7 @@ from all_events
 
 **Estimate:** 0.75h
 
-**Depends on:** Task 0.4, 0.5
+**Depends on:** Task 0.3, 0.4
 
 **Status:** —
 
@@ -461,17 +445,18 @@ models:
 | Phase | Tasks | Estimate | Status |
 |-------|-------|----------|--------|
 | Code cleanup | 0.0 | 0.5h | — |
-| Pre-work | 0.1 – 0.5 | 2.75h | — |
+| Pre-work | 0.1 – 0.4 | 2.25h | — |
 | Mart models | 1 – 5 | 5.25h | — |
 | Testing & docs | 6 – 7 | 2.5-3.5h | — |
-| **Total** | | **11-13h** | — |
+| **Total** | | **10.5-11.5h** | — |
 
 ---
 
 ## Decisions Already Made (Per Plan)
 
 - ✅ No Meeting Attendance table; consolidate to Event attendance with event_id = 0
-- ✅ PII excluded from marts (volunteer_id only)
+- ✅ PII excluded from marts (volunteer_id only via SELECT)
+- ✅ dlt-level PII filtering deferred to Phase 3 (before launch)
 - ✅ Deferred to Phase 3: availability, language_fluency, nonprofit_skills, tech_skills, roles_interested_in, volunteer_participation_summary, retention metrics, demographic reporting
 - ✅ Array expansion in mart layer (fct_project_volunteer), not staging
 - ✅ Synthetic row 0 in dim_event for monthly meetings
@@ -480,7 +465,7 @@ models:
 
 ## Key Design Notes
 
-1. **PII strategy:** Excluded at dlt ingestion (Task 0.1). Marts SELECT only ID and safe columns. No risk of accidental exposure.
+1. **PII strategy:** Marts SELECT only ID and safe columns (no names/emails). dlt-level filtering deferred to Phase 3 (before launch). Project in dev; public exposure risk is future. See ROADMAP_FUTURE.md.
 
 2. **Monthly meetings:** Event attendance records with event_id = 0. All monthly meetings share this pseudo-event. Actual meeting date comes from attendance.occasion_date.
 
