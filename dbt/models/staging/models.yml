@@ -120,6 +120,8 @@ models:
       - name: date
         description: Date of attendance (hard not_null test in fct_attendance for monthly meeting tracking)
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
       - name: status
         description: Attendance status (Attended / RSVP\'d / No-show / Absent / Remote)

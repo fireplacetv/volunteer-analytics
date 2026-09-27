@@ -1,11 +1,11 @@
 with source as (
     select
-        cast(json_extract_string(json_blob, '$.event_id') as integer) as event_id,
+        cast(event_id as integer) as event_id,
         id as airtable_record_id,
-        json_extract_string(json_blob, '$.name') as event_name,
-        json_extract_string(json_blob, '$.type') as event_type,
+        name as event_name,
+        event_type,
         event_date,
-        json_extract_string(json_blob, '$.description') as description,
+        description,
         created_time,
         last_modified
     from {{ ref('stg_events') }}

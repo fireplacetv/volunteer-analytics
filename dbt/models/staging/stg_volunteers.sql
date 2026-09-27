@@ -7,6 +7,7 @@ select
     created_time,
     last_modified,
     json_extract_string(json_blob, '$.volunteer_id') as volunteer_id,
+    json_extract_string(json_blob, '$.status') as status,
     json_extract_string(json_blob, '$.first_name') as first_name,
     json_extract_string(json_blob, '$.last_name') as last_name,
     json_extract_string(json_blob, '$.email') as email,
