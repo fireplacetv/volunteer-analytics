@@ -80,18 +80,3 @@ sources:
             description: Timestamp when record was created in Airtable
           - name: last_modified
             description: Last modified timestamp for incremental loading
-
-      - name: meeting_attendance
-        description: Meeting attendance records with feedback
-        columns:
-          - name: id
-            description: Attendance record ID
-            tests:
-              - not_null
-              - unique
-          - name: json_blob
-            description: Airtable fields serialized as JSON
-          - name: created_time
-            description: Timestamp when record was created in Airtable
-          - name: last_modified
-            description: Last modified timestamp for incremental loading
