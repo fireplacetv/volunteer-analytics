@@ -3,7 +3,7 @@ volunteer_analytics:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', '/workspace/dlt/airtable_pipeline/volunteer_data.duckdb') }}"
+      path: "{{ env_var('DUCKDB_PATH', '/workspace/artifacts/openoakland.duckdb') }}"
       schema: airtable
       threads: 4
       timeout_seconds: 300
