@@ -12,6 +12,7 @@ __pycache__/
 # Pipeline artifacts (generated, can be regenerated)
 artifacts/
 dlt/airtable_pipeline/airtable_tables.json
+dlt/airtable_pipeline/.dlt/
 *.duckdb
 *.duckdb.wal
 dbt/target/

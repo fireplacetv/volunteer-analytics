@@ -1,1 +1,0 @@
-{"_state_version":0,"_state_engine_version":4,"_local":{"first_run":true,"_dev_mode":false,"initial_cwd":"/workspace","last_run_context":null},"default_schema_name":null,"pipeline_name":"openoakland","schema_names":[],"dataset_name":"airtable","destination_type":"dlt.destinations.duckdb","destination_name":null,"_version_hash":"cipXHU1tk0HneCgb8nY4MvBvkYhlCbfoUaDyBmomamc="}
