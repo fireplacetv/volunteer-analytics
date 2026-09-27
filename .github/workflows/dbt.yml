@@ -34,7 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e .
           pip install -r dbt/requirements.txt
 
       - name: Set up DuckDB
