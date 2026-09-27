@@ -1,2 +1,3 @@
 dbt-duckdb==1.8.0
 dbt-core==1.8.0
+dlt[duckdb]>=0.3.0
