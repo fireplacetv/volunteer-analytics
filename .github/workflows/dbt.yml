@@ -35,6 +35,7 @@ jobs:
       - name: Run dlt Airtable ingestion
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
         run: |
           python dlt/airtable_pipeline/airtable_source.py
 
