@@ -23,7 +23,7 @@ Tables in scope: Volunteers, Projects, Project volunteers, Events, Event attenda
 ## Step 0 — Containerize the dev environment
 
 **Prompt:**
-> Add a `Dockerfile` and `docker-compose.yml` at the repo root that containerize this project's Python environment (dlt + dbt-duckdb + dependencies from `dlt/airtable_pipeline/requirements.txt` and `dbt/requirements.txt`). Mount the repo as a volume so edits made on the host are reflected live. Persist the DuckDB file (`dlt/airtable_pipeline/volunteer_data.duckdb`) on the host filesystem, not just inside the container, so it survives container rebuilds. Load Airtable credentials from a gitignored `.env` file via `env_file` in Compose — don't bake secrets into the image. Update `docs/SETUP.md` to document `docker compose build` and `docker compose run --rm dev bash` as the only setup steps a new volunteer needs.
+> Add a `Dockerfile` and `docker-compose.yml` at the repo root that containerize this project's Python environment (dlt + dbt-duckdb + dependencies from `dlt/airtable_pipeline/requirements.txt` and `dbt/requirements.txt`). Mount the repo as a volume so edits made on the host are reflected live. Persist the DuckDB file (`artifacts/openoakland.duckdb`) on the host filesystem, not just inside the container, so it survives container rebuilds. Load Airtable credentials from a gitignored `.env` file via `env_file` in Compose — don't bake secrets into the image. Update `docs/SETUP.md` to document `docker compose build` and `docker compose run --rm dev bash` as the only setup steps a new volunteer needs.
 
 **Checkpoint before moving on:**
 - [ ] `docker compose build` succeeds from a completely clean clone (no pre-existing local Python env, no cached pip packages)
@@ -54,7 +54,7 @@ Tables in scope: Volunteers, Projects, Project volunteers, Events, Event attenda
 > Airtable's linked-record fields are currently loading as arrays of record IDs. Add dlt logic to flatten these into clean many-to-many bridge tables in DuckDB, matching the Project volunteers, Event attendance, and Meeting attendance junction tables described in the PRD's Data Schema section.
 
 **Checkpoint before moving on:**
-- [ ] Query each bridge table directly from inside the container (e.g. `docker compose run --rm dev duckdb dlt/airtable_pipeline/volunteer_data.duckdb`)
+- [ ] Query each bridge table directly from inside the container (e.g. `docker compose run --rm dev duckdb artifacts/openoakland.duckdb`)
 - [ ] Pick one volunteer known to be on 2+ projects — confirm the bridge table has exactly that many rows for them, with correct project references (not raw record-ID strings)
 - [ ] Same spot-check for one volunteer with multiple event/meeting attendance records
 

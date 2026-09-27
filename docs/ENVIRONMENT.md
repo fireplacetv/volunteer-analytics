@@ -13,7 +13,7 @@ This project uses environment variables for configuration. Set these in your `.e
    ```bash
    AIRTABLE_API_KEY=your_key_here
    AIRTABLE_BASE_ID=your_base_id_here
-   DUCKDB_PATH=dlt/airtable_pipeline/volunteer_data.duckdb
+   DUCKDB_PATH=artifacts/openoakland.duckdb
    ```
 
 3. Load the environment before running the pipeline:
@@ -45,19 +45,19 @@ AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
 Path to the DuckDB database file. Both dlt and dbt use this same path.
 
 **Options:**
-- **Relative path** (relative to project root):
+- **Relative path** (default, relative to project root):
   ```
-  DUCKDB_PATH=dlt/airtable_pipeline/volunteer_data.duckdb
+  DUCKDB_PATH=artifacts/openoakland.duckdb
   ```
 
 - **Absolute path** (same for all environments):
   ```
-  DUCKDB_PATH=/var/data/volunteer_analytics/volunteer_data.duckdb
+  DUCKDB_PATH=/var/data/volunteer_analytics/openoakland.duckdb
   ```
 
 - **Docker mounted volume**:
   ```
-  DUCKDB_PATH=/data/volunteer_data.duckdb
+  DUCKDB_PATH=/data/openoakland.duckdb
   ```
 
 ## How It Works
@@ -102,13 +102,13 @@ services:
 ### Development
 In `.env`:
 ```
-DUCKDB_PATH=dlt/airtable_pipeline/volunteer_data.duckdb
+DUCKDB_PATH=artifacts/openoakland.duckdb
 ```
 
 ### Production
 In `.env.prod`:
 ```
-DUCKDB_PATH=/mnt/shared-storage/prod/volunteer_data.duckdb
+DUCKDB_PATH=/mnt/shared-storage/prod/openoakland.duckdb
 ```
 
 Load it:

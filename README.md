@@ -42,7 +42,7 @@ See `docs/SETUP.md` for setup instructions.
 
 ## Data output
 
-Data is loaded into a local DuckDB database at `dlt/airtable_pipeline/volunteer_data.duckdb`.
+Data is loaded into a local DuckDB database at `artifacts/openoakland.duckdb`.
 
 ## Questions or issues?
 
