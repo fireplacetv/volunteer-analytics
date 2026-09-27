@@ -13,10 +13,9 @@
 
 1. [Executive Summary](#executive-summary)
 2. [Phase 2 Plan (Authoritative Spec)](#phase-2-plan)
-3. [Conflicts & Resolutions](#conflicts--resolutions)
-4. [Detailed Task Breakdown](#detailed-task-breakdown)
-5. [Implementation Readiness](#implementation-readiness)
-6. [Phase 3+ Future Roadmap](#phase-3-future-roadmap)
+3. [Detailed Task Breakdown](#detailed-task-breakdown)
+4. [Implementation Readiness](#implementation-readiness)
+5. [Phase 3+ Future Roadmap](#phase-3-future-roadmap)
 
 ---
 
@@ -30,9 +29,9 @@
 
 **How:** 12 tasks (10.5–11.5h): cleanup staging (0.0–0.4), build marts (1–5), add tests & docs (6–7).
 
-**Confidence:** HIGH ✅ — All conflicts identified and resolved. One pending clarification (non-blocking).
+**Confidence:** HIGH ✅ — All conflicts identified and resolved (see Task Breakdown). One pending clarification: event_type field in Airtable (non-blocking, Task 0.3).
 
-**Go/No-Go:** **🟢 GO** — Start implementation immediately.
+**Go/No-Go:** **🟢 GO** — Start implementation immediately. Tasks 0.0–0.4 ready now; Task 0.3 is a quick 5-min Airtable check.
 
 ---
 
@@ -187,136 +186,6 @@
 **Array expansion:** Linked records (volunteer_id, project_id) are arrays in json_blob. Mart extracts [0] index using `json_extract_string(json_blob, '$.volunteer_id[0]')`.
 
 **Outreach tracking:** Derives count and latest date/status from outreach_1_date, outreach_2_date, outreach_3_date (and corresponding status fields).
-
----
-
-## Conflicts & Resolutions
-
-### Summary: 12 Areas Reviewed
-
-| # | Conflict | Severity | Status | Resolution | Task(s) |
-|---|----------|----------|--------|-----------|---------|
-| 1 | Meeting Attendance table exists (code has 6, plan expects 5) | CRITICAL | ✅ Resolved | Delete artifact | 0.0 |
-| 2 | stg_projects incomplete (only project_id) | HIGH | ✅ Resolved | Expand + build dim | 0.1, 2 |
-| 3 | stg_event_attendance missing volunteer_id, status | HIGH | ✅ Resolved | Expand + build fact | 0.2, 4 |
-| 4 | stg_volunteers field mismatches (tech_languages_tools vs. tech_skills) | MEDIUM | ✅ Resolved | Normalize + build dim | 0.1, 1 |
-| 5 | event_type vs. event_status field naming | MEDIUM | ⏳ Pending | Clarify in Airtable | 0.3 |
-| 6 | models.yml out of sync with actual SQL | LOW | ✅ Resolved | Update docs | 0.4 |
-| 7 | No mart tests yet | — | ✅ Resolved | Add tests | 6 |
-| 8 | No mart docs yet | — | ✅ Resolved | Add docs | 7 |
-| 9 | PII at dlt level (plan says exclude; code doesn't) | DEFERRED | ⏸️ Deferred to Phase 3 | Filter in Phase 3 | ROADMAP_FUTURE |
-| 10 | stg_project_volunteers minimal (arrays in json_blob) | INFO | ✅ Correct | Array expansion in marts | 5 |
-| 11 | Phase 1 complete? | — | ✅ Yes | Entry criteria met | — |
-| 12 | Mart models exist? | — | ✅ No (correct) | Phase 2 builds them | 1–5 |
-
-### Detailed Conflict Resolutions
-
-#### Conflict 1: Meeting Attendance Table (CRITICAL)
-**Plan expects:** 5 Airtable tables  
-**Code has:** 6 (+ Meeting Attendance)  
-**Issue:** Plan consolidates all attendance into Event attendance with event_id = 0. Meeting Attendance doesn't exist in real schema.
-
-**Resolution:** Delete artifacts (Task 0.0)
-- Delete `dbt/models/staging/stg_meeting_feedback.sql`
-- Remove "Meeting attendance" from `dlt/airtable_pipeline/airtable_tables.json`
-- Remove `meeting_attendance` from `dbt/models/sources.yml`
-- Verify `dbt run && dbt test` passes with 5 sources
-
----
-
-#### Conflict 2: stg_projects Incomplete (HIGH)
-**Plan expects:** 8 columns (project_number, name, status, stakeholder, description, dates, timestamps)  
-**Code has:** 4 columns (id, created_time, last_modified, project_id)
-
-**Resolution:** Expand stg_projects.sql (Task 0.1)
-```sql
-Extract from json_blob:
-- project_number (integer from project_id field)
-- project_name (from name)
-- status (Intake / Active / Complete / On hold)
-- stakeholder
-- description
-- start_date (cast to date)
-- end_date (cast to date)
-```
-
----
-
-#### Conflict 3: stg_event_attendance Missing FK & Status (HIGH)
-**Plan expects:** volunteer_id (FK), status (Attended/RSVP'd/No-show/Absent/Remote)  
-**Code has:** attendance_id, event_id, date, name, email (no FK, no status)
-
-**Resolution:** Expand stg_event_attendance.sql (Task 0.2)
-```sql
-Extract:
-- volunteer_id (from linked record)
-- status (Attended / RSVP'd / No-show / Absent / Remote)
-
-Remove:
-- name (attendee name, not a key)
-- email (attendee email, PII)
-```
-
----
-
-#### Conflict 4: stg_volunteers Field Name Mismatches (MEDIUM)
-**Plan expects:** tech_skills[], nonprofit_skills[], roles_interested_in[]  
-**Code extracts:** tech_languages_tools, nonprofit_experience_level, project_interests
-
-**Resolution:** Document as deferred (Task 0.4)
-- stg_volunteers extracts all fields ✓
-- Field names don't match plan exactly (extraction follows Airtable schema)
-- Phase 2 dim_volunteer uses Phase 2 scope columns only (status, joined_date, employment_status, etc.)
-- Deferred fields stay in staging, parsed in Phase 3 for metrics
-
----
-
-#### Conflict 5: event_type vs. event_status (MEDIUM)
-**Plan expects:** event_type with values (Monthly meeting / CityCamp / Community event / Other)  
-**Code has:** event_status in stg_events
-
-**Issue:** Field name mismatch. Plan may expect event category, not lifecycle status.
-
-**Resolution:** Clarify in Airtable (Task 0.3, ~5 min)
-1. Check Events table field names and values
-2. If "type" with event categories → rename in staging to event_type
-3. If "status" with lifecycle values → clarify with plan, adjust dim_event
-4. Proceed with dim_event build (Task 3) after clarification
-
-**Non-blocking:** Other tasks can proceed in parallel.
-
----
-
-#### Conflict 6: models.yml Out of Sync (LOW)
-**Plan expects:** Accurate schema docs for 5 staging models  
-**Code has:** models.yml describes different columns than actual SQL (e.g., lists "name" as single column, but SQL extracts first_name + last_name)
-
-**Resolution:** Update models.yml (Task 0.4)
-- Document all extracted fields
-- Link to phase-2-plan.md schemas
-- Mark deferred fields (Phase 3)
-- Note: staging is 1:1 with Airtable, not plan schema exactly
-
----
-
-#### Conflict 7: PII Not Excluded at dlt (DEFERRED)
-**Plan says:** Exclude vetting_status, vetting_notes, internal_admin_notes at dlt so they never reach DuckDB  
-**Code does:** Stores everything in json_blob
-
-**Issue:** PII reaches DuckDB. However, project in dev (no public launch).
-
-**Resolution:** Defer to Phase 3 (see Future Roadmap below)
-- Phase 2 marts exclude PII via SELECT (volunteer_id only, no names/emails) ✓
-- dlt-level filtering will be implemented in Phase 3 before production launch
-- Pragmatic: Focus Phase 2 on building marts correctly; harden for public exposure later
-
----
-
-#### Conflict 8–12: Remaining Items
-- **No mart tests yet:** ✅ Correct. Phase 2 builds them (Task 6)
-- **No mart docs yet:** ✅ Correct. Phase 2 builds them (Task 7)
-- **Phase 1 complete:** ✅ Yes. PHASE1_STATUS.md confirms entry criteria met
-- **stg_project_volunteers minimal:** ✅ Correct by design. Array expansion happens in fact model (Task 5)
 
 ---
 
