@@ -20,3 +20,7 @@ models:
   volunteer_analytics:
     staging:
       +materialized: view
+      +schema: stg_airtable
+    marts:
+      +materialized: table
+      +schema: marts

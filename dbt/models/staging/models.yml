@@ -2,125 +2,126 @@ version: 2
 
 models:
   - name: stg_volunteers
-    description: One-to-one staging model for volunteer records from Airtable. Extracts all volunteer fields and renames them for clarity.
+    description: One-to-one staging for volunteer records. Core fields extracted for Phase 2; deferred multi-select fields (availability, language_fluency, nonprofit_skills, tech_skills, skills_to_develop, roles_interested_in) stay in json_blob for Phase 3 parsing.
     columns:
       - name: id
-        description: Unique volunteer record ID from Airtable
-        tests:
+        description: Volunteer record ID from Airtable (primary key)
+        data_tests:
           - not_null
           - unique
-      - name: email
-        description: Volunteer email address
-      - name: name
-        description: Volunteer full name
       - name: created_time
         description: Timestamp when record was created in Airtable
+      - name: last_modified
+        description: Last modified timestamp for incremental loading
+      - name: status
+        description: Pending / Active / Inactive / Alumni
+      - name: joined_date
+        description: Date volunteer was activated (null while Pending)
+      - name: employment_status
+        description: Current employment status of volunteer
+      - name: hours_per_month
+        description: Self-reported availability band (0–4 / 5–9 / 10–19 / 20–39 / 40+)
+      - name: state
+        description: US state of residence
+      - name: timezone
+        description: Timezone of volunteer
+      - name: board_leadership_experience
+        description: Null checkbox → false in mart (has board leadership experience)
+      - name: grant_writing_experience
+        description: Null checkbox → false in mart (has grant writing experience)
+      - name: tech_languages_tools
+        description: Tech skills (deferred to Phase 3 for normalization)
 
   - name: stg_projects
-    description: One-to-one staging model for project records from Airtable. Extracts all project fields and renames them for clarity.
+    description: One-to-one staging for project records. Extracts all fields needed for Phase 2 dim_project.
     columns:
       - name: id
-        description: Unique project record ID from Airtable
-        tests:
+        description: Airtable record ID (uniqueness key, not human-readable)
+        data_tests:
           - not_null
           - unique
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+      - name: last_modified
+        description: Last modified timestamp for incremental loading
       - name: project_id
-        description: Project identifier
-      - name: name
+        description: Project auto-ID from Airtable (human-readable identifier)
+      - name: project_number
+        description: Project number (secondary identifier)
+      - name: project_name
         description: Project name
+      - name: status
+        description: Project status (Intake / Active / Complete / On hold)
+      - name: stakeholder
+        description: Partner organization name
       - name: description
         description: Project description
-      - name: status
-        description: Current project status (e.g., active, inactive, completed)
-      - name: created_time
-        description: Timestamp when record was created in Airtable
+      - name: start_date
+        description: Project start date
+      - name: end_date
+        description: Project end date (null until formally closed)
 
   - name: stg_project_volunteers
-    description: Bridge table linking volunteers to projects. Extracted from multipleRecordLinks fields in Airtable. NOTE - Individual volunteer_id and project_id extraction from arrays is a Phase 1 TODO.
+    description: Bridge table linking volunteers to projects. Stores linked records and outreach tracking data. Array extraction [0] happens in fct_project_volunteer.
     columns:
       - name: id
-        description: Unique junction record ID from Airtable
-        tests:
+        description: Airtable record ID (primary key)
+        data_tests:
           - not_null
           - unique
-      - name: join_id
-        description: Join identifier
       - name: created_time
         description: Timestamp when record was created in Airtable
+      - name: last_modified
+        description: Last modified timestamp for incremental loading
+      - name: json_blob
+        description: All fields from Airtable stored as JSON for flexible extraction in marts
 
   - name: stg_events
-    description: One-to-one staging model for event records from Airtable. Includes event metadata and creator information.
+    description: One-to-one staging for event records. All fields stored; dim_event filters for Phase 2 (see DECISIONS.md for event_type field mapping).
     columns:
       - name: id
-        description: Unique event record ID from Airtable
-        tests:
+        description: Airtable record ID (primary key)
+        data_tests:
           - not_null
           - unique
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+      - name: last_modified
+        description: Last modified timestamp for incremental loading
       - name: event_id
-        description: Event identifier
+        description: Event auto-ID from Airtable (human-readable identifier)
       - name: name
         description: Event name
       - name: description
         description: Event description
-      - name: location
-        description: Event location
-      - name: event_status
-        description: Event status (e.g., planned, in_progress, completed, cancelled)
       - name: event_date
-        description: Date when the event occurs. NOTE - 2 null values detected in Airtable source data
-      - name: check_in_url
-        description: URL for event check-in
-      - name: qr_code
-        description: QR code for event check-in
-      - name: created_by_id
-        description: ID of user who created this event
-      - name: created_by_email
-        description: Email of user who created this event
-      - name: created_by_name
-        description: Name of user who created this event
-      - name: created_time
-        description: Timestamp when record was created in Airtable
+        description: Date when the event occurs (2 nulls detected in source data)
+      - name: json_blob
+        description: All Airtable fields stored as JSON, including event_type, status, location, creator info
 
   - name: stg_event_attendance
-    description: One-to-one staging model for event attendance records from Airtable. Tracks which volunteers attended which events.
+    description: One-to-one staging for event attendance. PII (name, email) removed at source. Volunteer link required for fct_attendance.
     columns:
       - name: id
-        description: Unique attendance record ID from Airtable
-        tests:
+        description: Airtable record ID (primary key)
+        data_tests:
           - not_null
           - unique
+      - name: created_time
+        description: Timestamp when record was created in Airtable
+      - name: last_modified
+        description: Last modified timestamp for incremental loading
       - name: attendance_id
         description: Attendance identifier
       - name: event_id
-        description: Reference to event record. NOTE - Contains string IDs that match events.id
+        description: Event ID (links to dim_event; 0 = monthly meetings)
+      - name: volunteer_id
+        description: Volunteer ID (links to dim_volunteer; may be null for orphaned records)
       - name: date
-        description: Date of attendance. NOTE - All values are not null
-        tests:
-          - not_null
-      - name: name
-        description: Name of attendee (may differ from volunteer name)
-      - name: email
-        description: Email of attendee
-      - name: created_time
-        description: Timestamp when record was created in Airtable
-
-  - name: stg_meeting_feedback
-    description: One-to-one staging model for meeting attendance records from Airtable. Captures attendance and feedback from meeting attendees.
-    columns:
-      - name: id
-        description: Unique attendance record ID from Airtable
-        tests:
-          - not_null
-          - unique
-      - name: date
-        description: Date of attendance
-      - name: name
-        description: Name of attendee
-      - name: email
-        description: Email of attendee
-      - name: feedback
-        description: Feedback provided by attendee
-      - name: notes
-        description: Additional notes about the attendance
-      - name: created_time
-        description: Timestamp when record was created in Airtable
+        description: Date of attendance (hard not_null test in fct_attendance for monthly meeting tracking)
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: status
+        description: Attendance status (Attended / RSVP\'d / No-show / Absent / Remote)
