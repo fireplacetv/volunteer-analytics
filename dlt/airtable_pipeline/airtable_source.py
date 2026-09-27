@@ -44,11 +44,11 @@ def get_cursor_from_database(table_name: str, db_path: str) -> str:
         # dlt normalizes table names to snake_case
         normalized_name = normalize_table_name(table_name)
 
-        # DuckDB converts field names to lowercase with underscores, so "Last Modified" becomes "fields__last_modified"
+        # last_modified is extracted directly from Airtable's Last Modified field
         # Format as ISO 8601 string for Airtable filter formula
         result = conn.execute(f"""
-            SELECT strftime(MAX(fields__last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
-            FROM airtable.{normalized_name}
+            SELECT strftime(MAX(last_modified), '%Y-%m-%dT%H:%M:%S.000Z')
+            FROM raw_airtable.{normalized_name}
         """).fetchone()
         conn.close()
 
@@ -72,14 +72,14 @@ def normalize_linked_records():
         # Verify that the project_volunteers table was created with the expected structure
         tables = conn.execute("""
             SELECT table_name FROM information_schema.tables
-            WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+            WHERE table_schema = 'raw_airtable' AND table_name = 'project_volunteers'
         """).fetchall()
 
         if tables:
             # Log the actual columns present for debugging
             columns = conn.execute("""
                 SELECT column_name FROM information_schema.columns
-                WHERE table_schema = 'airtable' AND table_name = 'project_volunteers'
+                WHERE table_schema = 'raw_airtable' AND table_name = 'project_volunteers'
                 ORDER BY ordinal_position
             """).fetchall()
             col_names = [col[0] for col in columns]
@@ -148,8 +148,9 @@ def create_airtable_resource(
                 total_records += 1
                 yield {
                     "id": record["id"],
-                    "fields": record["fields"],
+                    "json_blob": json.dumps(record["fields"]),
                     "created_time": record.get("createdTime"),
+                    "last_modified": record["fields"].get("Last Modified"),
                 }
 
             offset = data.get("offset")
@@ -178,7 +179,7 @@ def load_volunteer_data():
     pipeline = dlt.pipeline(
         pipeline_name="openoakland",
         destination=dlt.destinations.duckdb(db_path),
-        dataset_name="airtable",
+        dataset_name="raw_airtable",
         pipelines_dir=pipelines_dir,
     )
 

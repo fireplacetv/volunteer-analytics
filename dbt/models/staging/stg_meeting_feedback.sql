@@ -5,9 +5,10 @@ with source as (
 select
     id,
     created_time,
-    fields__date as date,
-    fields__name as name,
-    fields__email as email,
-    fields__feedback as feedback,
-    fields__notes as notes
+    last_modified,
+    try_cast(json_extract_string(json_blob, '$.Date') as date) as date,
+    json_extract_string(json_blob, '$.Name') as name,
+    json_extract_string(json_blob, '$.Email') as email,
+    json_extract_string(json_blob, '$.Feedback') as feedback,
+    json_extract_string(json_blob, '$.Notes') as notes
 from source

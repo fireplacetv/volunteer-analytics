@@ -2,27 +2,39 @@ version: 2
 
 sources:
   - name: airtable
-    description: Raw data from Airtable
+    description: Raw data from Airtable (fields stored as JSON blobs)
     database: openoakland
-    schema: airtable
+    schema: raw_airtable
     tables:
       - name: volunteers
-        description: List of volunteers
+        description: Volunteer records from Airtable
         columns:
           - name: id
             description: Volunteer record ID
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
 
       - name: projects
-        description: List of projects
+        description: Project records from Airtable
         columns:
           - name: id
             description: Project record ID
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
 
       - name: project_volunteers
         description: Junction table linking volunteers to projects
@@ -32,15 +44,27 @@ sources:
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
 
       - name: events
-        description: List of events
+        description: Event records from Airtable
         columns:
           - name: id
             description: Event record ID
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
 
       - name: event_attendance
         description: Junction table for event attendance
@@ -50,6 +74,12 @@ sources:
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
 
       - name: meeting_attendance
         description: Meeting attendance records with feedback
@@ -59,3 +89,9 @@ sources:
             tests:
               - not_null
               - unique
+          - name: json_blob
+            description: Airtable fields serialized as JSON
+          - name: created_time
+            description: Timestamp when record was created in Airtable
+          - name: last_modified
+            description: Last modified timestamp for incremental loading
