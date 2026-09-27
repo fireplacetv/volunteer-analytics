@@ -35,6 +35,17 @@ def get_cursor_from_database(table_name: str, db_path: str) -> str:
     """
     try:
         conn = duckdb.connect(db_path)
+
+        # Debug: Check what columns exist for this table
+        columns = conn.execute(f"""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'airtable' AND table_name = '{table_name}'
+            ORDER BY ordinal_position
+        """).fetchall()
+        col_names = [col[0] for col in columns]
+        if "fields__last_modified" not in col_names:
+            print(f"DEBUG: {table_name} columns: {col_names}")
+
         # DuckDB converts field names to lowercase with underscores, so "Last Modified" becomes "fields__last_modified"
         # Format as ISO 8601 string for Airtable filter formula
         result = conn.execute(f"""
@@ -47,6 +58,7 @@ def get_cursor_from_database(table_name: str, db_path: str) -> str:
             return result[0]
         return None
     except Exception as e:
+        print(f"DEBUG: Error querying cursor for {table_name}: {e}")
         # Table doesn't exist yet (first run) or error querying
         return None
 
