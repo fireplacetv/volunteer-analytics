@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      DUCKDB_PATH: ${{ secrets.DUCKDB_PATH }}
 
     steps:
       - uses: actions/checkout@v3
@@ -39,26 +41,19 @@ jobs:
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           python dlt/airtable_pipeline/airtable_source.py
 
       - name: Run dbt
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           cd dbt && dbt parse && dbt build
 
       - name: Run dbt tests
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           cd dbt && dbt test
 
       - name: Generate dbt docs
         if: always()
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
           cd dbt && dbt docs generate
 
