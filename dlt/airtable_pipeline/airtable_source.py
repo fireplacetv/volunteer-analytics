@@ -94,6 +94,8 @@ def create_airtable_resource(
                 with open(state_file, "r") as f:
                     state_data = json.load(f)
                     cursor = state_data.get(table_name, {}).get("last_modified_cursor")
+                    if cursor:
+                        print(f"DEBUG: Loaded cursor for {table_name} from state: {cursor}")
             except Exception as e:
                 print(f"Warning: Could not load state from {state_file}: {e}")
 
@@ -104,9 +106,9 @@ def create_airtable_resource(
 
             # Add filter by last_modified if we have a cursor
             if cursor:
-                # Airtable filterByFormula: find records where last_modified > cursor
-                params["filterByFormula"] = f"{{last_modified}} > '{cursor}'"
-                print(f"Fetching {table_name} with incremental filter: last_modified > {cursor}")
+                # Airtable filterByFormula: find records where Last Modified > cursor
+                params["filterByFormula"] = f"{{Last Modified}} > '{cursor}'"
+                print(f"Fetching {table_name} with incremental filter: Last Modified > {cursor}")
             else:
                 print(f"Fetching {table_name} with full load (first run or no prior state)")
 
@@ -117,13 +119,10 @@ def create_airtable_resource(
             records = data.get("records", [])
 
             for i, record in enumerate(records):
-                # Debug: print first record's structure for each table
-                if i == 0 and cursor is None:
-                    print(f"DEBUG {table_name} - First record fields keys: {list(record.get('fields', {}).keys())}")
-
                 # Track the maximum last_modified timestamp for next run
-                if "last_modified" in record.get("fields", {}):
-                    ts = record["fields"]["last_modified"]
+                # Airtable field name is "Last Modified" (capitalized with space)
+                if "Last Modified" in record.get("fields", {}):
+                    ts = record["fields"]["Last Modified"]
                     if max_timestamp is None or ts > max_timestamp:
                         max_timestamp = ts
 
@@ -154,6 +153,8 @@ def create_airtable_resource(
                 print(f"Updated cursor for {table_name}: {max_timestamp}")
             except Exception as e:
                 print(f"Warning: Could not save cursor to state file: {e}")
+        elif not max_timestamp and state_file:
+            print(f"Note: {table_name} has no 'Last Modified' field, skipping incremental tracking")
 
     return fetch_table
 
