@@ -54,7 +54,7 @@ jobs:
             -v ${{ github.workspace }}:/workspace \
             -e DUCKDB_PATH \
             volunteer-analytics:latest \
-            sh -c "cd dbt && dbt parse && dbt build"
+            sh -c "cd dbt && dbt deps && dbt parse && dbt build"
 
       - name: Run dbt tests
         run: |

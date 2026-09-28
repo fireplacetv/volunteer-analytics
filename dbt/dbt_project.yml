@@ -24,3 +24,7 @@ models:
     marts:
       +materialized: table
       +schema: marts
+
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order: ['volunteer_analytics', 'dbt_utils']
