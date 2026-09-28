@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 Utility to list all tables in an Airtable base and their IDs.
-Helps populate airtable_tables.json with the correct table IDs.
+Helps populate airtable_tables.json with the correct table IDs, and lists
+each table's field names so they can be classified (allow / pseudonymize).
 """
 
 import os
@@ -50,8 +51,10 @@ def list_airtable_tables():
     for table in tables:
         name = table["name"]
         table_id = table["id"]
-        table_config[name] = table_id
+        table_config[name] = {"id": table_id, "allow": [], "pseudonymize": {}, "unused": {}}
         print(f"{name:<50} {table_id}")
+        for field in table.get("fields", []):
+            print(f"    - {field['name']} ({field['type']})")
 
     print("\n" + "=" * 70)
     print("JSON format for airtable_tables.json:")

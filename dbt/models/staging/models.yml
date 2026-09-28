@@ -31,6 +31,12 @@ models:
         description: Null checkbox → false in mart (has grant writing experience)
       - name: tech_languages_tools
         description: Tech skills (deferred to Phase 3 for normalization)
+      - name: first_name
+        description: Fake first name (pseudonymized at ingestion). Display only; may collide, never join on it.
+      - name: last_name
+        description: Fake last name (pseudonymized at ingestion). Display only; may collide, never join on it.
+      - name: email_hash
+        description: Keyed HMAC-SHA256 of the normalized email (pseudonymized at ingestion). Join key to stg_event_attendance.email_hash.
 
   - name: stg_projects
     description: One-to-one staging for project records. Extracts all fields needed for Phase 2 dim_project.
@@ -100,7 +106,7 @@ models:
         description: All Airtable fields stored as JSON, including event_type, status, location, creator info
 
   - name: stg_event_attendance
-    description: Staging for event attendance, one row per check-in. Repeat check-ins (same event_id, date, and case-insensitive email) are collapsed to the earliest record; see warn_duplicate_check_ins. Volunteer link required for fct_attendance.
+    description: Staging for event attendance, one row per check-in. Repeat check-ins (same event_id, date, and email_hash) are collapsed to the earliest record; see warn_duplicate_check_ins. Volunteer link required for fct_attendance.
     columns:
       - name: id
         description: Airtable record ID (primary key)
@@ -113,6 +119,8 @@ models:
         description: Last modified timestamp for incremental loading
       - name: attendance_id
         description: Attendance identifier
+      - name: email_hash
+        description: Keyed HMAC-SHA256 of the attendee's normalized email (pseudonymized at ingestion). Used to match check-ins to volunteers.
       - name: event_id
         description: Event ID (links to dim_event; 0 = monthly meetings)
       - name: volunteer_id

@@ -4,7 +4,6 @@ with source as (
 
 select
     id as volunteer_id,
-	email,
     status,
     joined_date,
     employment_status,

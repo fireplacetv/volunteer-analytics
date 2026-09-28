@@ -6,9 +6,11 @@ from dlt.common.typing import TDataItem
 from typing import Iterator, Callable
 import duckdb
 
+from pii import filter_fields, get_pii_key, validate_table_config
+
 
 def load_table_config():
-    """Load table ID mappings from airtable_tables.json."""
+    """Load per-table IDs and field classifications from airtable_tables.json."""
     config_path = os.path.join(os.path.dirname(__file__), "airtable_tables.json")
     with open(config_path, "r") as f:
         config = json.load(f)
@@ -91,17 +93,18 @@ def normalize_linked_records():
 
 
 def create_airtable_resource(
-    table_name: str, table_id: str, base_id: str, api_key: str, db_path: str
+    table_name: str, table_config: dict, base_id: str, api_key: str, db_path: str, pii_key: bytes
 ) -> Callable[[], Iterator[TDataItem]]:
     """
     Factory function to create a resource for a specific Airtable table.
 
     Args:
         table_name: Human-readable table name (for resource naming)
-        table_id: Airtable Table ID (tblXXXXXXXXXXXXXX format)
+        table_config: Table ID (tblXXXXXXXXXXXXXX format) and field classifications
         base_id: Airtable Base ID (appXXXXXXXXXXXXXX format)
         api_key: Airtable API key
         db_path: Path to DuckDB database for reading cursor state
+        pii_key: HMAC key for pseudonymizing PII fields
 
     Returns:
         A dlt resource that fetches data from the table
@@ -115,10 +118,11 @@ def create_airtable_resource(
         Filters by last_modified timestamp to only fetch changed records.
         Cursor is loaded from the database (max timestamp of already-loaded records).
         """
-        url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+        url = f"https://api.airtable.com/v0/{base_id}/{table_config['id']}"
         headers = {"Authorization": f"Bearer {api_key}"}
         offset = None
         total_records = 0
+        dropped_fields = set()
 
         # Load cursor from database (max Last Modified timestamp)
         cursor = get_cursor_from_database(table_name, db_path)
@@ -146,9 +150,13 @@ def create_airtable_resource(
 
             for record in records:
                 total_records += 1
+                # Only allowed and pseudonymized fields are kept; raw PII
+                # values never leave this function.
+                fields, dropped = filter_fields(record["id"], record["fields"], table_config, pii_key)
+                dropped_fields |= dropped
                 yield {
                     "id": record["id"],
-                    "json_blob": json.dumps(record["fields"]),
+                    "json_blob": json.dumps(fields),
                     "created_time": record.get("createdTime"),
                     "last_modified": record["fields"].get("Last Modified"),
                 }
@@ -158,6 +166,10 @@ def create_airtable_resource(
                 break
 
         print(f"Loaded {total_records} records from {table_name}")
+        if dropped_fields:
+            # Names only, never values: new Airtable fields show up here until
+            # they are classified in airtable_tables.json.
+            print(f"Dropped unclassified fields from {table_name}: {sorted(dropped_fields)}")
         # Cursor is automatically updated in database when dlt saves records
 
     return fetch_table
@@ -172,6 +184,7 @@ def load_volunteer_data():
     if not api_key or not base_id:
         raise ValueError("AIRTABLE_API_KEY and AIRTABLE_BASE_ID must be set")
 
+    pii_key = get_pii_key()
     table_config = load_table_config()
     db_path = get_db_path()
     pipelines_dir = get_pipelines_dir()
@@ -184,12 +197,13 @@ def load_volunteer_data():
     )
 
     resources = []
-    for table_name, table_id in table_config.items():
-        if table_id.startswith("YOUR_"):
+    for table_name, config in table_config.items():
+        if config["id"].startswith("YOUR_"):
             print(f"Skipping {table_name}: table ID not configured")
             continue
 
-        resource = create_airtable_resource(table_name, table_id, base_id, api_key, db_path)
+        validate_table_config(table_name, config)
+        resource = create_airtable_resource(table_name, config, base_id, api_key, db_path, pii_key)
         resources.append(resource)
 
     if not resources:

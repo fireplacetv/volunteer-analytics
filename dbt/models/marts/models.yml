@@ -244,9 +244,6 @@ models:
       - name: is_declined
         description: Boolean. Null checkbox → false. Whether volunteer declined involvement.
 
-      - name: decline_reason
-        description: Reason for decline (if any).
-
       - name: airtable_created_at
         description: Timestamp when record was created in Airtable (audit trail).
 

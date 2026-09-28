@@ -29,18 +29,42 @@
 
 ---
 
-## PII Excluded at Mart SELECT, Not dlt
+## PII Handled at dlt Ingestion (Allowlist + Pseudonymization)
 
-**Decision:** Volunteer PII (names, emails, demographics) is extracted in `stg_volunteers` but excluded from `dim_volunteer` SELECT clause.
+**Decision:** Every Airtable field is classified per table in `dlt/airtable_pipeline/airtable_tables.json`:
 
-**Why:** The project is in development. Focusing Phase 2 on correct dims/facts without adding dlt-level filtering complexity. Phase 3 will harden PII handling before public launch.
+- `allow`: passed through unchanged
+- `pseudonymize`: replaced in memory before the record is written
+  - `hash`: keyed HMAC-SHA256 of the lower-cased, trimmed value, stored as `<field>_hash` (e.g. `email` → `email_hash`)
+  - `first_name` / `last_name` / `full_name`: a stable word-based fake name (e.g. "Brave Otter"), built from `dlt/airtable_pipeline/wordlists/*.txt`
+- `unused`: known fields deliberately left out, each with a one-line reason. They are dropped like any other unlisted field, but are recorded so they are easy to find later and are not reported as unclassified.
+- anything not listed: dropped, and its name (never its value) is logged as `Dropped unclassified fields from <table>: [...]`
 
-**Trade-off:** Staging tables hold PII; the DuckDB file must remain private until Phase 3. Documented in project README and operational runbook.
+Raw PII never reaches DuckDB, dlt's local state, or the dbt docs site.
 
-**Implementation:**
-- `stg_volunteers` has all Airtable fields (including first_name, last_name, email, pronouns, age_range, etc.)
-- `dim_volunteer` SELECT excludes these fields and includes only: id, status, joined_date, employment_status, hours_per_month, state, timezone, board_leadership_experience, grant_writing_experience, timestamps
-- Phase 3 task: add dlt-level exclusion via environment variable (INCLUDE_PII)
+**Why:**
+- *Allowlist, not blocklist:* a new sensitive field added in Airtable stays out until someone classifies it.
+- *At dlt, not dbt staging:* staging models are views over `raw_airtable`, so masking in dbt would leave raw PII in the DuckDB file. A key in model SQL would also be rendered into `dbt/target/`, which CI publishes to GitHub Pages.
+- *Keyed hash, not plain SHA-256:* emails are guessable, so anyone with a list of addresses could hash them and match. Without `PII_HASH_KEY` they can't.
+- *Email hash as the join key:* `fct_attendance` matches check-ins to volunteers on `email_hash`, read from `stg_volunteers` so the hash never enters the marts.
+
+**Trade-offs:**
+- Fake names can collide (two people can both be "Brave Otter"). They are for readability only; join on record IDs or `email_hash`.
+- Pseudonymized data is still personal data: a hash plus state, employment status and join date can point to one person. The DuckDB file stays private; public reporting stays aggregate-only.
+- Changing `PII_HASH_KEY` changes every hash and fake name, so it requires a full reload.
+- The pipeline fails if `PII_HASH_KEY` is unset rather than loading unmasked data.
+
+**Field classification** (`airtable_tables.json` is the source of truth, with the reason for each unused field):
+
+| Table | Pseudonymized | Unused |
+|-------|---------------|--------|
+| Volunteers | `email` (hash), `first_name`, `last_name` (fake) | pronouns, age_range, race, city, accommodations, linkedin, github, website_portfolio, slack_handle, Profile Update Link, other_notes, prior_volunteer_experience, project_interests, engagement_goals, language_select, vetting fields, linked-record back-references |
+| Event attendance | `Email` (hash), `Name` (fake) | notes |
+| Events | — | Created By, Check-in URL, QR code |
+| Project volunteers | — | notes, decline_reason (may be free text) |
+| Projects | — | Project Volunteers (back-reference) |
+
+To start using a field: move it from `unused` to `allow` (or `pseudonymize`) in `airtable_tables.json`, then extract it in the staging model. `python dlt/airtable_pipeline/list_tables.py` prints every field per table.
 
 ---
 
@@ -114,7 +138,7 @@
 | Aspect | Phase 2 | Phase 3+ |
 |--------|---------|----------|
 | Dims/Facts | ✅ Built | — |
-| PII Filtering | Mart-level (not dlt) | dlt-level filtering |
+| PII Filtering | ✅ dlt-level allowlist + pseudonymization | Aggregate-only public reporting |
 | Multi-Select Parsing | Deferred (raw in staging) | Normalized tables |
 | Incremental Loads | Full refresh | Optimized incremental |
 | Public Reporting | Not yet | Evidence site (PII-filtered) |

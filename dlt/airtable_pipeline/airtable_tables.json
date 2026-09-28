@@ -1,9 +1,141 @@
 {
   "tables": {
-    "Volunteers": "tblY3mOtcLolIK4zy",
-    "Projects": "tblHHxE6GynJ5LXg1",
-    "Project volunteers": "tblxMoejcHv75yfYl",
-    "Events": "tblTxl4xLcnMyqEfS",
-    "Event attendance": "tblPU8dgnIu6Va07T"
+    "Volunteers": {
+      "id": "tblY3mOtcLolIK4zy",
+      "allow": [
+        "volunteer_id",
+        "status",
+        "joined_date",
+        "source",
+        "employment_status",
+        "hours_per_month",
+        "state",
+        "timezone",
+        "availability",
+        "language_fluency",
+        "nonprofit_skills",
+        "tech_skills",
+        "skills_to_develop",
+        "roles_interested_in",
+        "tech_languages_tools",
+        "tech_experience_level",
+        "nonprofit_experience_level",
+        "board_leadership_experience",
+        "grant_writing_experience",
+        "Last Modified"
+      ],
+      "pseudonymize": {
+        "email": "hash",
+        "first_name": "first_name",
+        "last_name": "last_name"
+      },
+      "unused": {
+        "pronouns": "PII: demographic",
+        "age_range": "PII: demographic",
+        "race": "PII: demographic",
+        "city": "PII: narrows location; state is kept instead",
+        "accommodations": "PII: may reveal disability or health information",
+        "linkedin": "PII: identifies the person",
+        "github": "PII: identifies the person",
+        "website_portfolio": "PII: identifies the person",
+        "slack_handle": "PII: identifies the person",
+        "Profile Update Link": "Secret: personal link that can edit the volunteer's profile",
+        "other_notes": "PII risk: free text",
+        "prior_volunteer_experience": "PII risk: free text",
+        "project_interests": "PII risk: free text",
+        "engagement_goals": "PII risk: free text",
+        "language_select": "Not PII; not used by any model yet",
+        "vetting_status": "Internal only: never ingest",
+        "vetting_notes": "Internal only: never ingest",
+        "internal_admin_notes": "Internal only: never ingest",
+        "Meeting Attendance": "Linked-record back-reference; the relationship is loaded from the junction table",
+        "Project Volunteers": "Linked-record back-reference; the relationship is loaded from the junction table"
+      }
+    },
+    "Projects": {
+      "id": "tblHHxE6GynJ5LXg1",
+      "allow": [
+        "project_id",
+        "project_number",
+        "name",
+        "status",
+        "stakeholder",
+        "description",
+        "start_date",
+        "end_date",
+        "Last Modified"
+      ],
+      "pseudonymize": {},
+      "unused": {
+        "Project Volunteers": "Linked-record back-reference; the relationship is loaded from the junction table"
+      }
+    },
+    "Project volunteers": {
+      "id": "tblxMoejcHv75yfYl",
+      "allow": [
+        "join_id",
+        "volunteer_id",
+        "project_id",
+        "role",
+        "commitment_date",
+        "end_date",
+        "status",
+        "outreach_1_date",
+        "outreach_2_date",
+        "outreach_3_date",
+        "outreach_1_status",
+        "outreach_2_status",
+        "outreach_3_status",
+        "declined",
+        "Last Modified"
+      ],
+      "pseudonymize": {},
+      "unused": {
+        "notes": "Internal free text",
+        "decline_reason": "PII risk: free text about personal circumstances"
+      }
+    },
+    "Events": {
+      "id": "tblTxl4xLcnMyqEfS",
+      "allow": [
+        "event_id",
+        "name",
+        "event_date",
+        "description",
+        "type",
+        "Type",
+        "location",
+        "status",
+        "created_by_id",
+        "Last Modified",
+        "Name",
+        "Description",
+        "Location",
+        "Event Status"
+      ],
+      "pseudonymize": {},
+      "unused": {
+        "Created By": "PII: Airtable collaborator (name and email)",
+        "Check-in URL": "Secret: anyone with it could submit check-ins",
+        "QR code": "Secret: anyone with it could submit check-ins"
+      }
+    },
+    "Event attendance": {
+      "id": "tblPU8dgnIu6Va07T",
+      "allow": [
+        "attendance_id",
+        "event_id",
+        "Date",
+        "status",
+        "Last Modified"
+      ],
+      "pseudonymize": {
+        "Email": "hash",
+        "Name": "full_name"
+      },
+      "unused": {
+        "notes": "Internal free text"
+      }
+    }
   }
 }

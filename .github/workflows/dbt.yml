@@ -35,15 +35,24 @@ jobs:
         run: |
           mkdir -p artifacts
 
+      - name: Run pipeline unit tests
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            volunteer-analytics:latest \
+            python -m unittest discover -s dlt/airtable_pipeline -p 'test_*.py' -v
+
       - name: Run dlt Airtable ingestion
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          PII_HASH_KEY: ${{ secrets.PII_HASH_KEY }}
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -e AIRTABLE_API_KEY \
             -e AIRTABLE_BASE_ID \
+            -e PII_HASH_KEY \
             -e DUCKDB_PATH \
             volunteer-analytics:latest \
             python dlt/airtable_pipeline/airtable_source.py

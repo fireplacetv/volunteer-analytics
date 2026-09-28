@@ -25,7 +25,7 @@ cd dbt && dbt docs generate && open target/index.html
 
 1. **dim_volunteer** — Volunteer dimension. One row per volunteer. Key: `volunteer_id` (Airtable record ID).
    - 10 columns: status, joined_date, employment_status, hours_per_month, state, timezone, board/grant experience, timestamps
-   - Excludes: names, emails, demographics (PII deferred to Phase 3)
+   - Excludes: names, email hashes, demographics. PII is dropped or pseudonymized at ingestion (see DECISIONS.md)
 
 2. **dim_project** — Project dimension. One row per project. Key: `project_id` (Airtable auto-ID, human-readable).
    - 11 columns: name, status, stakeholder, description, dates, timestamps
@@ -99,7 +99,7 @@ cd dbt && dbt docs generate && open target/index.html
 
 **Fix:**
 1. Open Airtable Event attendance table
-2. Sort/filter by email and date to find duplicates
+2. Sort/filter by email and date to find duplicates (DuckDB only holds `email_hash`, so look up the original emails in Airtable)
 3. Delete or merge the duplicate record
 4. Re-run: `dbt test -s no_duplicate_attendance`
 
@@ -150,7 +150,9 @@ cd dbt && dbt docs generate && open target/index.html
 
 ## Schema Dependencies
 
-If Airtable field names change, update `dbt/models/staging/stg_*.sql` extractions:
+If Airtable field names change, update the field lists in `dlt/airtable_pipeline/airtable_tables.json` **and** the `dbt/models/staging/stg_*.sql` extractions. Any field not listed in `airtable_tables.json` is dropped at ingestion; the dlt log prints `Dropped unclassified fields from <table>: [...]` so renamed or new fields are easy to spot. Classify each one as `allow`, `pseudonymize` or `unused` to clear the message.
+
+**After this change, delete any local `artifacts/openoakland.duckdb` and `dlt/airtable_pipeline/.dlt/` created before PII filtering** and reload. Incremental loads only rewrite changed records, so an old file keeps raw PII in unchanged rows. CI builds a fresh database every run and is unaffected.
 
 | Staging Model | Airtable Table | Critical Fields |
 |---------------|----------------|-----------------|
@@ -262,7 +264,6 @@ Check dbt logs for specific errors.
 
 ## Future Work (Phase 3+)
 
-- **PII Filtering:** Implement dlt-level exclusion of sensitive fields before data lands in DuckDB
 - **Multi-Select Parsing:** Normalize skills, availability, language_fluency into separate tables
 - **Metrics:** Build `volunteer_participation_summary`, retention models, demographic reporting
 - **Incremental Loads:** Optimize dbt runs with incremental strategies
