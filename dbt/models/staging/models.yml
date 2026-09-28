@@ -100,7 +100,7 @@ models:
         description: All Airtable fields stored as JSON, including event_type, status, location, creator info
 
   - name: stg_event_attendance
-    description: One-to-one staging for event attendance. PII (name, email) removed at source. Volunteer link required for fct_attendance.
+    description: Staging for event attendance, one row per check-in. Repeat check-ins (same event_id, date, and case-insensitive email) are collapsed to the earliest record; see warn_duplicate_check_ins. Volunteer link required for fct_attendance.
     columns:
       - name: id
         description: Airtable record ID (primary key)

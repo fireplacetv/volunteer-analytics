@@ -208,6 +208,9 @@ models:
           - not_null:
               config:
                 severity: warn
+          - relationships:
+              to: ref('dim_project')
+              field: airtable_record_id
 
       - name: role
         description: Free-text role on project (e.g. UX Designer).

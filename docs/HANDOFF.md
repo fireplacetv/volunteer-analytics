@@ -8,7 +8,7 @@ This document guides day-to-day operation of the volunteer analytics pipeline af
 
 ```bash
 docker compose build
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt run && dbt test"
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt deps && dbt run && dbt test"
 ```
 
 **To view schema and lineage:**
@@ -48,13 +48,14 @@ cd dbt && dbt docs generate && open target/index.html
 
 ### Tests
 
-**Generic tests** (in tests/marts_tests.yml):
+**Generic tests** (in `dbt/models/*/models.yml`):
 - `not_null` and `unique` on all primary keys
 - `relationships`: both facts link to dims; orphaned rows fail (error) or warn separately
 - `accepted_values` on all status fields (severity: warn)
 
-**Singular tests**:
-- `no_duplicate_attendance.sql` — Fails if same (volunteer, event, date) appears 2+ times
+**Singular tests** (in `dbt/tests/`):
+- `no_duplicate_attendance.sql` — Fails if same (volunteer, event, date) appears 2+ times in fct_attendance
+- `warn_duplicate_check_ins.sql` — Warns if Airtable has repeat check-ins (same event, date, email); stg_event_attendance collapses these, keeping the earliest
 - `no_future_attendance.sql` — Fails if any attendance_date > today
 - `warn_orphaned_attendance.sql` — Warns if any fct_attendance.volunteer_id is null
 - `warn_orphaned_project_volunteer.sql` — Warns if any fct_project_volunteer links are null
@@ -80,15 +81,25 @@ cd dbt && dbt docs generate && open target/index.html
 
 ---
 
+### `warn_duplicate_check_ins` Test Warns
+
+**Symptom:** Repeat check-ins (same event, date and email) found in Airtable.
+
+**Root cause:** Someone checked in more than once (e.g., scanned twice). `stg_event_attendance` already keeps only the earliest check-in, so marts are unaffected; this is a non-blocking prompt to clean up the source.
+
+**Fix (optional):** Delete the extra records in the Airtable Event attendance table.
+
+---
+
 ### `no_duplicate_attendance` Test Fails
 
 **Symptom:** "Duplicate check-in detected for volunteer X at event Y on date Z."
 
-**Root cause:** Airtable has duplicate attendance records (e.g., scanned twice at check-in).
+**Root cause:** A repeat check-in that `stg_event_attendance` can't collapse: one record has a Date and the other doesn't (the mart fills a missing date from the event's date).
 
 **Fix:**
 1. Open Airtable Event attendance table
-2. Sort/filter by volunteer_id and date to find duplicates
+2. Sort/filter by email and date to find duplicates
 3. Delete or merge the duplicate record
 4. Re-run: `dbt test -s no_duplicate_attendance`
 
@@ -131,7 +142,7 @@ cd dbt && dbt docs generate && open target/index.html
 
 **Action:**
 1. Check Airtable field definition for the new status value
-2. Update the `accepted_values` test in tests/marts_tests.yml
+2. Update the `accepted_values` test in dbt/models/marts/models.yml
 3. Re-run: `dbt test`
 4. (Optional) Update DECISIONS.md to document the new status
 
@@ -170,7 +181,7 @@ If Airtable field names change, update `dbt/models/staging/stg_*.sql` extraction
 
 **Manual Run:**
 - Use docker compose (see Quick Start section above)
-- Or run locally with: `cd dbt && dbt run && dbt test`
+- Or run locally with: `cd dbt && dbt deps && dbt run && dbt test`
 
 ---
 
@@ -199,7 +210,7 @@ If Airtable field names change, update `dbt/models/staging/stg_*.sql` extraction
 
 ### Step 4: Run the Pipeline
 
-1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt run && dbt test"`
+1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt deps && dbt run && dbt test"`
 2. Check that all models build and tests pass
 3. Review logs for warnings (especially orphaned_attendance or new status values)
 

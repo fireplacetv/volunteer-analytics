@@ -2,5 +2,5 @@
 
 select count(*) as orphaned_count
 from {{ ref('fct_project_volunteer') }}
-where volunteer_id is null or project_id is null
+where volunteer_id is null or project_record_id is null
 having orphaned_count > 0
