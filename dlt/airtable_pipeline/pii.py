@@ -6,7 +6,9 @@ Every field is treated one of three ways, per table, in airtable_tables.json:
 - pseudonymize: replaced before the record leaves memory
     - "hash": keyed HMAC-SHA256 of the normalized value, stored as <field>_hash
     - "first_name" / "last_name" / "full_name": a stable word-based fake name
-- anything else: dropped
+- unused: known fields deliberately left out (dropped, but documented here
+  so they are easy to find later and are not reported as unclassified)
+- anything else: dropped and reported as unclassified
 """
 
 import hashlib
@@ -17,32 +19,21 @@ PII_KEY_ENV = "PII_HASH_KEY"
 
 PSEUDONYM_METHODS = {"hash", "first_name", "last_name", "full_name"}
 
-# Fake names are built from these lists, e.g. "Brave Otter". They are for
-# readability only: with a few hundred people, two can share a fake name, so
-# never join or count on them. Use the *_hash fields or record IDs instead.
-ADJECTIVES = [
-    "Amber", "Bold", "Brave", "Bright", "Brisk", "Calm", "Clever", "Cosmic",
-    "Crisp", "Curious", "Daring", "Dapper", "Eager", "Fancy", "Fearless",
-    "Fleet", "Gentle", "Gilded", "Glad", "Golden", "Grand", "Happy", "Hardy",
-    "Honest", "Humble", "Jolly", "Keen", "Kind", "Lively", "Lucky", "Lunar",
-    "Mellow", "Merry", "Mighty", "Misty", "Modest", "Noble", "Nimble", "Plucky",
-    "Polite", "Proud", "Quick", "Quiet", "Rapid", "Rosy", "Rustic", "Sandy",
-    "Scarlet", "Serene", "Sharp", "Shiny", "Silver", "Sly", "Smooth", "Snowy",
-    "Solar", "Spry", "Steady", "Stellar", "Sturdy", "Sunny", "Swift", "Tidy",
-    "Tranquil", "Trusty", "Velvet", "Vivid", "Warm", "Wise", "Witty", "Zesty",
-]
+WORDLIST_DIR = os.path.join(os.path.dirname(__file__), "wordlists")
 
-ANIMALS = [
-    "Albatross", "Alpaca", "Badger", "Beaver", "Bison", "Bobcat", "Condor",
-    "Cougar", "Coyote", "Crane", "Dolphin", "Egret", "Elk", "Falcon", "Ferret",
-    "Finch", "Fox", "Gecko", "Gopher", "Heron", "Hummingbird", "Ibis", "Jaguar",
-    "Kestrel", "Koala", "Lark", "Lemur", "Lynx", "Magpie", "Manatee", "Marmot",
-    "Marten", "Mink", "Moose", "Narwhal", "Newt", "Ocelot", "Octopus", "Orca",
-    "Osprey", "Otter", "Owl", "Panda", "Pelican", "Penguin", "Pika", "Plover",
-    "Puffin", "Quail", "Rabbit", "Raccoon", "Raven", "Robin", "Salmon", "Seal",
-    "Sparrow", "Squirrel", "Stork", "Swallow", "Swan", "Tapir", "Tern", "Toucan",
-    "Turtle", "Walrus", "Weasel", "Whale", "Wombat", "Wren", "Yak", "Zebra",
-]
+
+def load_wordlist(name: str) -> list[str]:
+    """Load one word per line from wordlists/<name>.txt, ignoring blanks."""
+    with open(os.path.join(WORDLIST_DIR, f"{name}.txt")) as f:
+        return [line.strip() for line in f if line.strip()]
+
+
+# Fake names are built from these lists, e.g. "Brave Otter". They are for
+# readability only: two people can share a fake name, so never join or count
+# on them. Use the *_hash fields or record IDs instead. Editing the lists
+# changes existing fake names on the next full reload.
+ADJECTIVES = load_wordlist("adjectives")
+ANIMALS = load_wordlist("animals")
 
 
 def get_pii_key() -> bytes:
@@ -81,11 +72,18 @@ def hashed_field_name(field: str) -> str:
 
 
 def validate_table_config(table_name: str, config: dict) -> None:
-    allow = set(config.get("allow", []))
+    groups = {
+        "allow": set(config.get("allow", [])),
+        "pseudonymize": set(config.get("pseudonymize", {})),
+        "unused": set(config.get("unused", [])),
+    }
+    names = list(groups)
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            overlap = groups[a] & groups[b]
+            if overlap:
+                raise ValueError(f"{table_name}: fields in both {a} and {b}: {sorted(overlap)}")
     pseudonymize = config.get("pseudonymize", {})
-    overlap = allow & set(pseudonymize)
-    if overlap:
-        raise ValueError(f"{table_name}: fields both allowed and pseudonymized: {sorted(overlap)}")
     unknown = {m for m in pseudonymize.values() if m not in PSEUDONYM_METHODS}
     if unknown:
         raise ValueError(f"{table_name}: unknown pseudonymize methods: {sorted(unknown)}")
@@ -96,7 +94,8 @@ def filter_fields(record_id: str, fields: dict, config: dict, key: bytes) -> tup
     Apply a table's allow/pseudonymize config to one record's fields.
 
     Returns the filtered fields and the set of field names that were dropped
-    because they are not classified. Values of dropped fields are discarded.
+    because they are not classified at all (fields listed as unused are dropped
+    silently). Values of dropped fields are discarded.
     """
     allow = config.get("allow", [])
     pseudonymize = config.get("pseudonymize", {})
@@ -123,5 +122,5 @@ def filter_fields(record_id: str, fields: dict, config: dict, key: bytes) -> tup
         else:
             out[field] = fake_name(seed, method)
 
-    dropped = set(fields) - set(allow) - set(pseudonymize)
+    dropped = set(fields) - set(allow) - set(pseudonymize) - set(config.get("unused", []))
     return out, dropped

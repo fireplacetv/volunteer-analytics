@@ -51,7 +51,7 @@ def list_airtable_tables():
     for table in tables:
         name = table["name"]
         table_id = table["id"]
-        table_config[name] = {"id": table_id, "allow": [], "pseudonymize": {}}
+        table_config[name] = {"id": table_id, "allow": [], "pseudonymize": {}, "unused": {}}
         print(f"{name:<50} {table_id}")
         for field in table.get("fields", []):
             print(f"    - {field['name']} ({field['type']})")

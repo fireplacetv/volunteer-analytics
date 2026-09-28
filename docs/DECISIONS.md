@@ -36,8 +36,9 @@
 - `allow`: passed through unchanged
 - `pseudonymize`: replaced in memory before the record is written
   - `hash`: keyed HMAC-SHA256 of the lower-cased, trimmed value, stored as `<field>_hash` (e.g. `email` → `email_hash`)
-  - `first_name` / `last_name` / `full_name`: a stable word-based fake name (e.g. "Brave Otter")
-- anything not listed: dropped (names of dropped fields are logged, never values)
+  - `first_name` / `last_name` / `full_name`: a stable word-based fake name (e.g. "Brave Otter"), built from `dlt/airtable_pipeline/wordlists/*.txt`
+- `unused`: known fields deliberately left out, each with a one-line reason. They are dropped like any other unlisted field, but are recorded so they are easy to find later and are not reported as unclassified.
+- anything not listed: dropped, and its name (never its value) is logged as `Dropped unclassified fields from <table>: [...]`
 
 Raw PII never reaches DuckDB, dlt's local state, or the dbt docs site.
 
@@ -53,17 +54,17 @@ Raw PII never reaches DuckDB, dlt's local state, or the dbt docs site.
 - Changing `PII_HASH_KEY` changes every hash and fake name, so it requires a full reload.
 - The pipeline fails if `PII_HASH_KEY` is unset rather than loading unmasked data.
 
-**Field classification** (from the fields the staging models read; unlisted fields are dropped):
+**Field classification** (`airtable_tables.json` is the source of truth, with the reason for each unused field):
 
-| Table | Pseudonymized | Dropped (examples) |
-|-------|---------------|--------------------|
-| Volunteers | `email` (hash), `first_name`, `last_name` (fake) | pronouns, age_range, race, city, accommodations, linkedin, github, website_portfolio, slack_handle, Profile Update Link, other_notes, prior_volunteer_experience, project_interests, vetting fields |
+| Table | Pseudonymized | Unused |
+|-------|---------------|--------|
+| Volunteers | `email` (hash), `first_name`, `last_name` (fake) | pronouns, age_range, race, city, accommodations, linkedin, github, website_portfolio, slack_handle, Profile Update Link, other_notes, prior_volunteer_experience, project_interests, engagement_goals, language_select, vetting fields, linked-record back-references |
 | Event attendance | `Email` (hash), `Name` (fake) | notes |
-| Events | — | created_by_email, created_by_name, check_in_url, qr_code |
+| Events | — | Created By, Check-in URL, QR code |
 | Project volunteers | — | notes, decline_reason (may be free text) |
-| Projects | — | — |
+| Projects | — | Project Volunteers (back-reference) |
 
-To add a field: list it under `allow` (or `pseudonymize`) in `airtable_tables.json`, then extract it in the staging model. `python dlt/airtable_pipeline/list_tables.py` prints every field per table.
+To start using a field: move it from `unused` to `allow` (or `pseudonymize`) in `airtable_tables.json`, then extract it in the staging model. `python dlt/airtable_pipeline/list_tables.py` prints every field per table.
 
 ---
 

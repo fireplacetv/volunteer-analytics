@@ -150,9 +150,9 @@ cd dbt && dbt docs generate && open target/index.html
 
 ## Schema Dependencies
 
-If Airtable field names change, update the field lists in `dlt/airtable_pipeline/airtable_tables.json` **and** the `dbt/models/staging/stg_*.sql` extractions. Any field not listed in `airtable_tables.json` is dropped at ingestion; the dlt log prints `Dropped unclassified fields from <table>: [...]` so renamed or new fields are easy to spot.
+If Airtable field names change, update the field lists in `dlt/airtable_pipeline/airtable_tables.json` **and** the `dbt/models/staging/stg_*.sql` extractions. Any field not listed in `airtable_tables.json` is dropped at ingestion; the dlt log prints `Dropped unclassified fields from <table>: [...]` so renamed or new fields are easy to spot. Classify each one as `allow`, `pseudonymize` or `unused` to clear the message.
 
-**After this change, delete any local `artifacts/openoakland.duckdb` created before PII filtering** and reload. Incremental loads only rewrite changed records, so an old file keeps raw PII in unchanged rows. CI builds a fresh database every run and is unaffected.
+**After this change, delete any local `artifacts/openoakland.duckdb` and `dlt/airtable_pipeline/.dlt/` created before PII filtering** and reload. Incremental loads only rewrite changed records, so an old file keeps raw PII in unchanged rows. CI builds a fresh database every run and is unaffected.
 
 | Staging Model | Airtable Table | Critical Fields |
 |---------------|----------------|-----------------|

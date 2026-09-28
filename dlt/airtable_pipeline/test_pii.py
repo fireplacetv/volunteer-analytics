@@ -3,6 +3,8 @@ import unittest
 from unittest import mock
 
 from pii import (
+    ADJECTIVES,
+    ANIMALS,
     filter_fields,
     get_pii_key,
     hash_value,
@@ -15,6 +17,7 @@ VOLUNTEERS = {
     "id": "tblVolunteers",
     "allow": ["status", "Last Modified"],
     "pseudonymize": {"email": "hash", "first_name": "first_name", "last_name": "last_name"},
+    "unused": {"city": "PII"},
 }
 
 ATTENDANCE = {
@@ -30,6 +33,11 @@ class FilterFieldsTest(unittest.TestCase):
         out, dropped = filter_fields("rec1", fields, VOLUNTEERS, KEY)
         self.assertEqual(out, {"status": "Active"})
         self.assertEqual(dropped, {"pronouns", "accommodations"})
+
+    def test_unused_fields_are_dropped_but_not_reported(self):
+        out, dropped = filter_fields("rec1", {"status": "Active", "city": "Oakland"}, VOLUNTEERS, KEY)
+        self.assertEqual(out, {"status": "Active"})
+        self.assertEqual(dropped, set())
 
     def test_raw_pii_values_never_appear_in_output(self):
         fields = {"email": "Jo@Example.org", "first_name": "Jo", "last_name": "Smith"}
@@ -75,6 +83,15 @@ class ConfigTest(unittest.TestCase):
     def test_field_cannot_be_both_allowed_and_pseudonymized(self):
         with self.assertRaises(ValueError):
             validate_table_config("T", {"id": "t", "allow": ["email"], "pseudonymize": {"email": "hash"}})
+
+    def test_field_cannot_be_both_allowed_and_unused(self):
+        with self.assertRaises(ValueError):
+            validate_table_config("T", {"id": "t", "allow": ["city"], "unused": {"city": "PII"}})
+
+    def test_wordlists_are_large_and_unique(self):
+        for words in (ADJECTIVES, ANIMALS):
+            self.assertGreaterEqual(len(words), 250)
+            self.assertEqual(len(words), len(set(words)))
 
     def test_unknown_method_rejected(self):
         with self.assertRaises(ValueError):
