@@ -23,20 +23,13 @@ jobs:
       contents: write
       pull-requests: write
     env:
-      DUCKDB_PATH: ${{ secrets.DUCKDB_PATH }}
+      DUCKDB_PATH: /workspace/artifacts/openoakland.duckdb
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r dbt/requirements.txt
+      - name: Build Docker image
+        run: docker build -t volunteer-analytics:latest .
 
       - name: Create artifacts directory
         run: |
@@ -47,26 +40,38 @@ jobs:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
         run: |
-          python dlt/airtable_pipeline/airtable_source.py
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e AIRTABLE_API_KEY \
+            -e AIRTABLE_BASE_ID \
+            -e DUCKDB_PATH \
+            volunteer-analytics:latest \
+            python dlt/airtable_pipeline/airtable_source.py
 
       - name: Run dbt
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
-          cd dbt && dbt parse && dbt run --empty
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e DUCKDB_PATH \
+            volunteer-analytics:latest \
+            sh -c "cd dbt && dbt parse && dbt build"
 
       - name: Run dbt tests
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
-          cd dbt && dbt test
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e DUCKDB_PATH \
+            volunteer-analytics:latest \
+            sh -c "cd dbt && dbt test"
 
       - name: Generate dbt docs
         if: always()
-        env:
-          DUCKDB_PATH: ${{ github.workspace }}/artifacts/openoakland.duckdb
         run: |
-          cd dbt && dbt docs generate
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e DUCKDB_PATH \
+            volunteer-analytics:latest \
+            sh -c "cd dbt && dbt docs generate"
 
       - name: Upload dbt docs artifact
         if: github.ref == 'refs/heads/main' && always()
