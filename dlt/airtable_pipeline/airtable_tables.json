@@ -1,9 +1,100 @@
 {
   "tables": {
-    "Volunteers": "tblY3mOtcLolIK4zy",
-    "Projects": "tblHHxE6GynJ5LXg1",
-    "Project volunteers": "tblxMoejcHv75yfYl",
-    "Events": "tblTxl4xLcnMyqEfS",
-    "Event attendance": "tblPU8dgnIu6Va07T"
+    "Volunteers": {
+      "id": "tblY3mOtcLolIK4zy",
+      "allow": [
+        "volunteer_id",
+        "status",
+        "joined_date",
+        "source",
+        "employment_status",
+        "hours_per_month",
+        "state",
+        "timezone",
+        "availability",
+        "language_fluency",
+        "nonprofit_skills",
+        "tech_skills",
+        "skills_to_develop",
+        "roles_interested_in",
+        "tech_languages_tools",
+        "tech_experience_level",
+        "nonprofit_experience_level",
+        "board_leadership_experience",
+        "grant_writing_experience",
+        "Last Modified"
+      ],
+      "pseudonymize": {
+        "email": "hash",
+        "first_name": "first_name",
+        "last_name": "last_name"
+      }
+    },
+    "Projects": {
+      "id": "tblHHxE6GynJ5LXg1",
+      "allow": [
+        "project_id",
+        "project_number",
+        "name",
+        "status",
+        "stakeholder",
+        "description",
+        "start_date",
+        "end_date",
+        "Last Modified"
+      ],
+      "pseudonymize": {}
+    },
+    "Project volunteers": {
+      "id": "tblxMoejcHv75yfYl",
+      "allow": [
+        "join_id",
+        "volunteer_id",
+        "project_id",
+        "role",
+        "commitment_date",
+        "end_date",
+        "status",
+        "outreach_1_date",
+        "outreach_2_date",
+        "outreach_3_date",
+        "outreach_1_status",
+        "outreach_2_status",
+        "outreach_3_status",
+        "declined",
+        "Last Modified"
+      ],
+      "pseudonymize": {}
+    },
+    "Events": {
+      "id": "tblTxl4xLcnMyqEfS",
+      "allow": [
+        "event_id",
+        "name",
+        "event_date",
+        "description",
+        "type",
+        "Type",
+        "location",
+        "status",
+        "created_by_id",
+        "Last Modified"
+      ],
+      "pseudonymize": {}
+    },
+    "Event attendance": {
+      "id": "tblPU8dgnIu6Va07T",
+      "allow": [
+        "attendance_id",
+        "event_id",
+        "Date",
+        "status",
+        "Last Modified"
+      ],
+      "pseudonymize": {
+        "Email": "hash",
+        "Name": "full_name"
+      }
+    }
   }
 }

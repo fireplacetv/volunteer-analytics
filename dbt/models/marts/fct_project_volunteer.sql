@@ -28,7 +28,6 @@ with_derived as (
             else outreach_1_status
         end as last_outreach_status,
         coalesce(cast(declined as boolean), false) as is_declined,
-        decline_reason,
         airtable_created_at,
         airtable_modified_at
     from source

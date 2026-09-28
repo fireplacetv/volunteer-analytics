@@ -15,7 +15,6 @@ select
     json_extract_string(json_blob, '$.outreach_2_status') as outreach_2_status,
     json_extract_string(json_blob, '$.outreach_3_status') as outreach_3_status,
     json_extract_string(json_blob, '$.declined') as declined,
-    json_extract_string(json_blob, '$.decline_reason') as decline_reason,
     created_time as airtable_created_at,
     created_time as airtable_modified_at
 from {{ source('airtable', 'project_volunteers') }}

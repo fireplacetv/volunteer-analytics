@@ -8,7 +8,9 @@
 
 ### PII & Security
 
-#### [ ] Implement dlt-level PII filtering
+#### [x] Implement dlt-level PII filtering
+**Status:** Done. Implemented as a per-table allowlist with keyed-hash and fake-name pseudonymization rather than an `INCLUDE_PII` blocklist; see "PII Handled at dlt Ingestion" in DECISIONS.md. The notes below are the original plan.
+
 **Priority:** HIGH (before public launch)  
 **When:** Phase 3, before Evidence site deployment
 

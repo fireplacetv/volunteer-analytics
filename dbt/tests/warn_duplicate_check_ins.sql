@@ -5,9 +5,9 @@
 select
     json_extract_string(json_blob, '$.event_id') as event_id,
     try_cast(json_extract_string(json_blob, '$.Date') as date) as date,
-    lower(trim(json_extract_string(json_blob, '$.Email'))) as email,
+    json_extract_string(json_blob, '$.email_hash') as email_hash,
     count(*) as check_in_count
 from {{ source('airtable', 'event_attendance') }}
-where json_extract_string(json_blob, '$.Email') is not null
+where json_extract_string(json_blob, '$.email_hash') is not null
 group by all
 having count(*) > 1
