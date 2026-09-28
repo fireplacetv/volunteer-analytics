@@ -48,12 +48,12 @@ cd dbt && dbt docs generate && open target/index.html
 
 ### Tests
 
-**Generic tests** (in tests/marts_tests.yml):
+**Generic tests** (in `dbt/models/*/models.yml`):
 - `not_null` and `unique` on all primary keys
 - `relationships`: both facts link to dims; orphaned rows fail (error) or warn separately
 - `accepted_values` on all status fields (severity: warn)
 
-**Singular tests**:
+**Singular tests** (in `dbt/tests/`):
 - `no_duplicate_attendance.sql` — Fails if same (volunteer, event, date) appears 2+ times
 - `no_future_attendance.sql` — Fails if any attendance_date > today
 - `warn_orphaned_attendance.sql` — Warns if any fct_attendance.volunteer_id is null
@@ -131,7 +131,7 @@ cd dbt && dbt docs generate && open target/index.html
 
 **Action:**
 1. Check Airtable field definition for the new status value
-2. Update the `accepted_values` test in tests/marts_tests.yml
+2. Update the `accepted_values` test in dbt/models/marts/models.yml
 3. Re-run: `dbt test`
 4. (Optional) Update DECISIONS.md to document the new status
 
