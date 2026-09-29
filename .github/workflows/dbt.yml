@@ -6,12 +6,14 @@ on:
     paths:
       - 'dbt/**'
       - 'dlt/**'
+      - 'scripts/**'
       - '.github/workflows/dbt.yml'
       - 'docker-compose.yml'
   pull_request:
     paths:
       - 'dbt/**'
       - 'dlt/**'
+      - 'scripts/**'
       - '.github/workflows/dbt.yml'
       - 'docker-compose.yml'
   workflow_dispatch:
@@ -40,7 +42,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             volunteer-analytics:latest \
-            python -m unittest discover -s dlt/airtable_pipeline -p 'test_*.py' -v
+            sh -c "python -m unittest discover -s dlt/airtable_pipeline -p 'test_*.py' -v && python -m unittest discover -s scripts -p 'test_*.py' -v"
 
       - name: Run dlt Airtable ingestion
         env:
@@ -72,6 +74,49 @@ jobs:
             -e DUCKDB_PATH \
             volunteer-analytics:latest \
             sh -c "cd dbt && dbt test"
+
+      - name: Generate data report
+        if: github.event_name == 'pull_request'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -e DUCKDB_PATH \
+            -e RUN_URL \
+            volunteer-analytics:latest \
+            python scripts/data_report.py artifacts/data_report.md
+          cat artifacts/data_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post data report to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('artifacts/data_report.md', 'utf8');
+            const marker = '<!-- data-report -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Generate dbt docs
         if: always()
