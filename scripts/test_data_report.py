@@ -49,10 +49,10 @@ class DataReportTest(unittest.TestCase):
     def setUp(self):
         self.con = make_db()
 
-    def test_staging_summary_counts_rows_and_finds_latest_record(self):
-        rows = {model: (count, latest) for model, count, latest in staging_summary(self.con, MODELS)}
-        self.assertEqual(rows["stg_volunteers"], (2, datetime.date(2026, 3, 13)))
-        self.assertEqual(rows["stg_project_volunteers"], (None, None))
+    def test_staging_summary_finds_latest_record_without_row_counts(self):
+        rows = {model: latest for model, latest in staging_summary(self.con, MODELS)}
+        self.assertEqual(rows["stg_volunteers"], datetime.date(2026, 3, 13))
+        self.assertEqual(rows["stg_project_volunteers"], None)
 
     def test_staging_models_come_from_the_staging_folder_of_the_manifest(self):
         manifest = {
@@ -81,13 +81,16 @@ class DataReportTest(unittest.TestCase):
             ],
         )
 
-    def test_render_flags_missing_models(self):
+    def test_render_shows_staging_and_attendance(self):
         report = render(staging_summary(self.con, MODELS), attendance_by_month(self.con, TODAY), TODAY)
         self.assertTrue(report.startswith(MARKER))
         self.assertIn("⚠️", report)
         self.assertIn("`stg_project_volunteers`", report)
-        self.assertIn("| volunteers | 2 | 2026-03-13 (2d) |", report)
-        self.assertIn("2026-01 2 ████████████████", report)
+        self.assertIn("| volunteers | 2026-03-13 (2d) |", report)
+        # Check for attendance with bars but no count values
+        self.assertIn("2026-01", report)  # Month shown
+        self.assertNotIn("2026-01  ", report)  # But no padding for count alignment
+        self.assertNotIn("rows", report.lower())  # No row count reporting
 
     def test_updated_line_shows_time_commit_and_run(self):
         now = datetime.datetime(2026, 3, 15, 9, 5, tzinfo=datetime.timezone.utc)
