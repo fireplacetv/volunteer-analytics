@@ -14,7 +14,6 @@ Every field is treated one of three ways, per table, in airtable_tables.json:
 import hashlib
 import hmac
 import os
-import random
 
 PII_KEY_ENV = "PII_HASH_KEY"
 
@@ -35,7 +34,7 @@ def load_wordlist(name: str) -> list[str]:
 # the lists changes existing fake names on the next full reload.
 ADJECTIVES = load_wordlist("adjectives")
 ANIMALS = load_wordlist("animals")
-VERBS = load_wordlist("verbs") if os.path.exists(os.path.join(WORDLIST_DIR, "verbs.txt")) else []
+VERBS = load_wordlist("verbs")
 
 
 def get_pii_key() -> bytes:
@@ -60,24 +59,23 @@ def hash_value(value, key: bytes) -> str:
 
 def fake_name(digest: str, method: str) -> str:
     """Pick a stable fake name from a hex digest."""
-    if method == "first_name":
-        return ADJECTIVES[int(digest[:16], 16) % len(ADJECTIVES)]
-    if method == "last_name":
-        return ANIMALS[int(digest[16:32], 16) % len(ANIMALS)]
-
-    # For full_name, randomly choose between patterns using the digest
-    if VERBS:
-        pattern = int(digest[32:34], 16) % 2
-    else:
-        pattern = 0
+    pattern = int(digest[32:34], 16) % 2
 
     if pattern == 0:  # adjective-animal
-        first = ADJECTIVES[int(digest[:16], 16) % len(ADJECTIVES)]
-        last = ANIMALS[int(digest[16:32], 16) % len(ANIMALS)]
-        return f"{first} {last}"
+        adj = ADJECTIVES[int(digest[:16], 16) % len(ADJECTIVES)]
+        animal = ANIMALS[int(digest[16:32], 16) % len(ANIMALS)]
+        if method == "first_name":
+            return adj
+        if method == "last_name":
+            return animal
+        return f"{adj} {animal}"
     else:  # animal-verb
         animal = ANIMALS[int(digest[:16], 16) % len(ANIMALS)]
         verb = VERBS[int(digest[16:32], 16) % len(VERBS)]
+        if method == "first_name":
+            return animal
+        if method == "last_name":
+            return verb
         return f"{animal} {verb}"
 
 
