@@ -218,7 +218,7 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 
 ### Step 5: Query the Marts
 
-1. Open DuckDB: `duckdb duckdb.db` (or open from `.duckdb` file in project)
+1. Query with `dbt show` inside the container: `docker compose run --rm dev dbt show --inline "<sql>"`
 2. Query some basic facts:
    - `SELECT COUNT(*) FROM dim_volunteer WHERE status = 'Active';`
    - `SELECT volunteer_id, COUNT(*) as attendance_count FROM fct_attendance GROUP BY 1 ORDER BY 2 DESC LIMIT 5;`

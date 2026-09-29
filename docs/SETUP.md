@@ -74,7 +74,7 @@ This single command:
 ### 5. Verify the pipeline worked
 
 ```bash
-docker compose run --rm dev duckdb artifacts/openoakland.duckdb -c "SELECT COUNT(*) FROM airtable.volunteers;"
+docker compose run --rm dev dbt show --inline "select count(*) from {{ source('airtable', 'volunteers') }}"
 ```
 
 If you see a row count, the pipeline succeeded.
@@ -87,14 +87,16 @@ To poke around, run a shell inside the container:
 docker compose run --rm dev bash
 ```
 
-Then you can run dlt, dbt, and duckdb commands directly:
+Then you can run dlt and dbt commands directly:
 
 ```bash
 python dlt/airtable_pipeline/run.py
 dbt run
 dbt test
-duckdb artifacts/openoakland.duckdb
+dbt show --inline "select * from {{ ref('dim_volunteer') }}"
 ```
+
+The image doesn't include the `duckdb` CLI. To run arbitrary SQL, use the DuckDB Python package, e.g. `python -c "import duckdb; duckdb.connect('artifacts/openoakland.duckdb').sql('show all tables').show()"`.
 
 ## Troubleshooting
 
@@ -128,7 +130,7 @@ If you need to force a full reload of all records (e.g., after a schema change, 
 
 ```bash
 # Drop the raw table(s) to reset the cursor
-duckdb artifacts/openoakland.duckdb "DROP TABLE raw_airtable.volunteers"
+docker compose run --rm dev python -c "import duckdb; duckdb.connect('artifacts/openoakland.duckdb').execute('DROP TABLE raw_airtable.volunteers')"
 
 # Then run the pipeline — it will do a full load of the dropped table(s)
 docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && dbt run && dbt test"
