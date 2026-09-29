@@ -26,6 +26,7 @@ jobs:
       pull-requests: write
     env:
       DUCKDB_PATH: /workspace/artifacts/openoakland.duckdb
+      DBT_THREADS: 4
 
     steps:
       - uses: actions/checkout@v3
@@ -64,6 +65,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -e DUCKDB_PATH \
+            -e DBT_THREADS \
             volunteer-analytics:latest \
             sh -c "cd dbt && dbt deps && dbt parse && dbt run"
 
@@ -72,6 +74,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -e DUCKDB_PATH \
+            -e DBT_THREADS \
             volunteer-analytics:latest \
             sh -c "cd dbt && dbt test"
 
