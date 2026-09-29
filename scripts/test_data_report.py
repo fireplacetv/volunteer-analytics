@@ -86,8 +86,8 @@ class DataReportTest(unittest.TestCase):
         self.assertTrue(report.startswith(MARKER))
         self.assertIn("⚠️", report)
         self.assertIn("`stg_project_volunteers`", report)
-        self.assertIn("| volunteers | 2 | 2026-03-13 (2d) |", report)
-        self.assertIn("2026-01 2 ████████████████", report)
+        self.assertIn("| volunteers | 2026-03-13 (2d) |", report)
+        self.assertIn("2026-01 ████████████████", report)
 
     def test_updated_line_shows_time_commit_and_run(self):
         now = datetime.datetime(2026, 3, 15, 9, 5, tzinfo=datetime.timezone.utc)
