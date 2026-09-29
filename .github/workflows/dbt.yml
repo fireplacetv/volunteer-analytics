@@ -67,7 +67,7 @@ jobs:
             -e DUCKDB_PATH \
             -e DBT_THREADS \
             volunteer-analytics:latest \
-            sh -c "cd dbt && dbt parse && dbt run"
+            sh -c "cd dbt && dbt deps && dbt parse && dbt run"
 
       - name: Run dbt tests
         run: |

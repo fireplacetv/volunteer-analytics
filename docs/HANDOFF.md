@@ -8,7 +8,7 @@ This document guides day-to-day operation of the volunteer analytics pipeline af
 
 ```bash
 docker compose build
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt run && dbt test"
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt deps && dbt run && dbt test"
 ```
 
 **To view schema and lineage:**
@@ -183,7 +183,7 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 
 **Manual Run:**
 - Use docker compose (see Quick Start section above)
-- Or run locally (outside Docker) with: `cd dbt && dbt deps && dbt run && dbt test`. The Docker image already has dbt packages installed.
+- Or run locally with: `cd dbt && dbt deps && dbt run && dbt test`
 
 ---
 
@@ -212,7 +212,7 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 
 ### Step 4: Run the Pipeline
 
-1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt run && dbt test"`
+1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt deps && dbt run && dbt test"`
 2. Check that all models build and tests pass
 3. Review logs for warnings (especially orphaned_attendance or new status values)
 

@@ -98,8 +98,6 @@ dbt show --inline "select * from {{ ref('dim_volunteer') }}"
 
 The image doesn't include the `duckdb` CLI. To run arbitrary SQL, use the DuckDB Python package, e.g. `python -c "import duckdb; duckdb.connect('artifacts/openoakland.duckdb').sql('show all tables').show()"`.
 
-dbt packages (`dbt/packages.yml`) are installed into the image when it's built, so there's no need to run `dbt deps`. Rebuild the image (`docker compose build`) after changing `packages.yml`.
-
 ## Troubleshooting
 
 ### "Cannot connect to Docker daemon"
