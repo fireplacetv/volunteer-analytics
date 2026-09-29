@@ -9,11 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install duckdb CLI binary
-RUN mkdir ~/.local && \
-	mkdir ~/.local/bin && \
-	curl https://install.duckdb.org | bash
-
 # Copy and install Python dependencies
 COPY dlt/airtable_pipeline/requirements.txt dlt/airtable_pipeline/requirements.txt
 COPY dbt/requirements.txt dbt/requirements.txt
@@ -37,5 +32,6 @@ ENV PATH=/root/.local/bin:$PATH
 RUN python --version
 RUN dbt --version
 RUN duckdb --version
+RUN dbt deps
 
 CMD ["/bin/bash"]
