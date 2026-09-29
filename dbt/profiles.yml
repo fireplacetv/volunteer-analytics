@@ -1,9 +1,9 @@
-volunteer_analytics:
+openoakland_analytics:
   target: dev
   outputs:
     dev:
       type: duckdb
       path: "{{ env_var('DUCKDB_PATH', '/workspace/artifacts/openoakland.duckdb') }}"
-      schema: stg_airtable
-      threads: 4
+      schema: dbt
+      threads: 1
       timeout_seconds: 300
