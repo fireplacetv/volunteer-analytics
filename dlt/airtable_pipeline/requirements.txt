@@ -1,2 +1,2 @@
-dlt[duckdb]==1.30.0
+dlt[duckdb,postgres]==1.30.0
 requests>=2.28.0

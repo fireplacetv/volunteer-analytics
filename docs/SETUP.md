@@ -63,7 +63,7 @@ This builds the image locally with Python 3.11, dlt, dbt, and all dependencies p
 ### 4. Run the data pipeline and tests
 
 ```bash
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && dbt run && dbt test"
 ```
 
 This single command:
@@ -90,7 +90,7 @@ docker compose run --rm dev bash
 Then you can run dlt, dbt, and duckdb commands directly:
 
 ```bash
-python dlt/airtable_pipeline/airtable_source.py
+python dlt/airtable_pipeline/run.py
 dbt run
 dbt test
 duckdb artifacts/openoakland.duckdb
@@ -111,7 +111,7 @@ Make sure your `.env` file exists in the repo root and contains both variables. 
 Verify your API key and base ID are correct. API keys expire; generate a new one at https://airtable.com/account/tokens if needed.
 
 ### The DuckDB file is not being created
-Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py"` and check the output for errors. The file should appear at `artifacts/openoakland.duckdb` on your host machine.
+Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py"` and check the output for errors. The file should appear at `artifacts/openoakland.duckdb` on your host machine.
 
 ## Backfilling and Data History
 
@@ -119,22 +119,22 @@ Run `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_
 
 The pipeline uses the `last_modified` timestamp field in Airtable to load only changed records on each run:
 - **First run:** Full load of all records from all tables
-- **Subsequent runs:** Only records with `last_modified` timestamp newer than the previous run are fetched
+- **Subsequent runs:** Only records with `last_modified` newer than the latest one already in the destination are fetched. The cursor is read from the loaded tables (`dlt/airtable_pipeline/cursors.py`), so it always matches what actually landed
 - dlt's merge logic (`primary_key="id"`) ensures records are updated in-place, not duplicated
 
 ### What Happens During a Backfill
 
-If you need to force a full reload of all records (e.g., after a schema change, or to verify data consistency), you can reset the incremental cursor:
+If you need to force a full reload of all records (e.g., after a schema change, or to verify data consistency), drop the raw table. The cursor is computed from the table itself, so a missing table means a full load for that table. Deleting `dlt/airtable_pipeline/.dlt/` does **not** reset it.
 
 ```bash
-# Delete the dlt state file to reset the cursor
-rm .dlt/pipelines/openoakland/state.json
+# Drop the raw table(s) to reset the cursor
+duckdb artifacts/openoakland.duckdb "DROP TABLE raw_airtable.volunteers"
 
-# Then run the pipeline — it will do a full load
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
+# Then run the pipeline — it will do a full load of the dropped table(s)
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && dbt run && dbt test"
 ```
 
-**Important:** A backfill will update existing records in DuckDB (based on their `id`), not erase them. However, **if you delete and recreate the DuckDB file, all historical data is lost**. Plan data recovery strategies before doing full table replacements.
+**Important:** The dropped table is empty until the reload finishes, and the reload brings back only records that still exist in Airtable. Records deleted in Airtable are gone from the reloaded table. **If you delete and recreate the DuckDB file, all historical data is lost**. Plan data recovery strategies before doing full table replacements.
 
 ### Data History Limitations (Phase 1)
 

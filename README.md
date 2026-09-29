@@ -14,7 +14,9 @@ See `docs/SETUP.md` for setup instructions.
 
 ```
 ├── dlt/airtable_pipeline/          # dlt pipeline to extract data from Airtable
-│   ├── airtable_source.py          # dlt resource definitions
+│   ├── source.py                   # Airtable resources and PII filtering (no destination code)
+│   ├── cursors.py                  # incremental cursors read from the destination
+│   ├── run.py                      # entry point: builds the pipeline for the configured destination
 │   └── requirements.txt             # Python dependencies for dlt
 ├── dbt/                            # dbt transformations
 │   ├── dbt_project.yml             # dbt project config

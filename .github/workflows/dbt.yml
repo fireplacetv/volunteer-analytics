@@ -55,7 +55,7 @@ jobs:
             -e PII_HASH_KEY \
             -e DUCKDB_PATH \
             volunteer-analytics:latest \
-            python dlt/airtable_pipeline/airtable_source.py
+            python dlt/airtable_pipeline/run.py
 
       - name: Run dbt
         run: |

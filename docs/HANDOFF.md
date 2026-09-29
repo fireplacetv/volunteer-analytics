@@ -8,7 +8,7 @@ This document guides day-to-day operation of the volunteer analytics pipeline af
 
 ```bash
 docker compose build
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt deps && dbt run && dbt test"
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt deps && dbt run && dbt test"
 ```
 
 **To view schema and lineage:**
@@ -212,7 +212,7 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 
 ### Step 4: Run the Pipeline
 
-1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && cd dbt && dbt deps && dbt run && dbt test"`
+1. Run the full pipeline: `docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && cd dbt && dbt deps && dbt run && dbt test"`
 2. Check that all models build and tests pass
 3. Review logs for warnings (especially orphaned_attendance or new status values)
 
@@ -234,7 +234,7 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 
 **Fix:** Run dlt ingestion first:
 ```bash
-docker compose run --rm dev python dlt/airtable_pipeline/airtable_source.py
+docker compose run --rm dev python dlt/airtable_pipeline/run.py
 ```
 
 ### Issue: "Model not found: ref('stg_volunteers')"
