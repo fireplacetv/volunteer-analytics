@@ -70,6 +70,12 @@ Path to the DuckDB database file, used when `DESTINATION_TYPE` is `duckdb` (the 
   DUCKDB_PATH=/data/openoakland.duckdb
   ```
 
+### DBT_PACKAGES_DIR
+Where dbt installs and looks for packages (`packages-install-path` in `dbt/dbt_project.yml`). Leave it unset.
+
+- **Docker:** the image sets it to `/opt/dbt_packages` and runs `dbt deps` at build time. The packages can't live under `/workspace` because the repo is mounted there at runtime, which would hide them. Rebuild the image after changing `dbt/packages.yml`.
+- **Outside Docker:** defaults to `dbt/dbt_packages`; run `dbt deps` once.
+
 ## How It Works
 
 Both dlt and dbt use the same `DUCKDB_PATH` environment variable:

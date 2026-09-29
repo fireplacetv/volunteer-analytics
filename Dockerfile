@@ -20,11 +20,11 @@ RUN pip install --no-cache-dir \
 ENV DBT_PROFILES_DIR=/workspace/dbt
 ENV DBT_PROJECT_DIR=/workspace/dbt
 
-# Install dbt packages outside /workspace, which is a bind mount at runtime
-# and would hide them. dbt_project.yml reads this path via env_var.
+# Install dbt packages. They go outside /workspace because the repo is
+# mounted over /workspace at runtime, which would hide them.
 ENV DBT_PACKAGES_DIR=/opt/dbt_packages
-COPY dbt/dbt_project.yml dbt/packages.yml dbt/package-lock.yml /tmp/dbt-deps/
-RUN dbt deps --project-dir /tmp/dbt-deps && rm -rf /tmp/dbt-deps
+COPY dbt/dbt_project.yml dbt/packages.yml dbt/package-lock.yml dbt/
+RUN dbt deps
 
 # Verify tools are available
 RUN python --version
