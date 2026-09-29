@@ -3,9 +3,24 @@ import unittest
 
 import duckdb
 
-from data_report import MARKER, attendance_by_month, recent_months, render, staging_summary
+from data_report import (
+    MARKER,
+    attendance_by_month,
+    recent_months,
+    render,
+    staging_models,
+    staging_summary,
+)
 
 TODAY = datetime.date(2026, 3, 15)
+
+MODELS = [
+    "stg_event_attendance",
+    "stg_events",
+    "stg_project_volunteers",
+    "stg_projects",
+    "stg_volunteers",
+]
 
 
 def make_db():
@@ -34,9 +49,20 @@ class DataReportTest(unittest.TestCase):
         self.con = make_db()
 
     def test_staging_summary_counts_rows_and_finds_latest_record(self):
-        rows = {model: (count, latest) for model, count, latest in staging_summary(self.con)}
+        rows = {model: (count, latest) for model, count, latest in staging_summary(self.con, MODELS)}
         self.assertEqual(rows["stg_volunteers"], (2, datetime.date(2026, 3, 13)))
         self.assertEqual(rows["stg_project_volunteers"], (None, None))
+
+    def test_staging_models_come_from_the_staging_folder_of_the_manifest(self):
+        manifest = {
+            "nodes": {
+                "model.p.stg_b": {"resource_type": "model", "name": "stg_b", "original_file_path": "models/staging/stg_b.sql"},
+                "model.p.stg_a": {"resource_type": "model", "name": "stg_a", "original_file_path": "models/staging/stg_a.sql"},
+                "model.p.dim_x": {"resource_type": "model", "name": "dim_x", "original_file_path": "models/marts/dim_x.sql"},
+                "test.p.not_null": {"resource_type": "test", "name": "not_null", "original_file_path": "models/staging/models.yml"},
+            }
+        }
+        self.assertEqual(staging_models(manifest), ["stg_a", "stg_b"])
 
     def test_recent_months_crosses_year_boundary(self):
         self.assertEqual(
@@ -55,7 +81,7 @@ class DataReportTest(unittest.TestCase):
         )
 
     def test_render_flags_missing_models(self):
-        report = render(staging_summary(self.con), attendance_by_month(self.con, TODAY), TODAY)
+        report = render(staging_summary(self.con, MODELS), attendance_by_month(self.con, TODAY), TODAY)
         self.assertTrue(report.startswith(MARKER))
         self.assertIn("⚠️", report)
         self.assertIn("`stg_project_volunteers`", report)

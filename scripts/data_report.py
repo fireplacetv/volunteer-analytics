@@ -8,6 +8,7 @@ Usage: python scripts/data_report.py [output.md]
 """
 
 import datetime
+import json
 import os
 import sys
 
@@ -15,13 +16,7 @@ import duckdb
 
 MARKER = "<!-- data-report -->"
 
-STAGING_MODELS = [
-    "stg_volunteers",
-    "stg_events",
-    "stg_event_attendance",
-    "stg_projects",
-    "stg_project_volunteers",
-]
+MANIFEST_PATH = "dbt/target/manifest.json"
 
 ATTENDANCE_MONTHS = 3
 BAR_WIDTH = 16
@@ -35,9 +30,19 @@ def find_relation(con, name):
     return f'"{row[0]}"."{name}"' if row else None
 
 
-def staging_summary(con):
+def staging_models(manifest):
+    """Names of the models under models/staging/ in a dbt manifest, sorted."""
+    return sorted(
+        node["name"]
+        for node in manifest["nodes"].values()
+        if node["resource_type"] == "model"
+        and node["original_file_path"].startswith("models/staging/")
+    )
+
+
+def staging_summary(con, models):
     rows = []
-    for model in STAGING_MODELS:
+    for model in models:
         relation = find_relation(con, model)
         if relation is None:
             rows.append((model, None, None))
@@ -126,9 +131,12 @@ def main():
     db_path = os.environ.get("DUCKDB_PATH", "artifacts/openoakland.duckdb")
     today = datetime.date.today()
 
+    with open(os.environ.get("DBT_MANIFEST", MANIFEST_PATH)) as f:
+        models = staging_models(json.load(f))
+
     con = duckdb.connect(db_path, read_only=True)
     report = render(
-        staging_summary(con),
+        staging_summary(con, models),
         attendance_by_month(con, today),
         today,
         run_url=os.environ.get("RUN_URL"),
