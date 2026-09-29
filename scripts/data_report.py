@@ -48,7 +48,7 @@ def staging_summary(con, models):
             rows.append((model, None, None))
             continue
         count, latest = con.execute(
-            f"select count(*), max(created_time)::date from {relation}"
+            f"select max(created_time)::date from {relation}"
         ).fetchone()
         rows.append((model, count, latest))
     return rows
@@ -118,10 +118,9 @@ def render(staging, attendance, today, updated=None):
     if missing:
         lines += [f"Empty or missing: {', '.join(f'`{m}`' for m in missing)}", ""]
 
-    lines += ["| model | rows | latest record |", "|---|--:|---|"]
+    lines += ["| model | latest record (days ago) |", "|---|---|"]
     for model, count, latest in staging:
-        rows = "missing" if count is None else f"{count:,}"
-        lines.append(f"| {model.removeprefix('stg_')} | {rows} | {days_ago(latest, today)} |")
+        lines.append(f"| {model.removeprefix('stg_')} | {days_ago(latest, today)} |")
 
     lines += ["", "**Attendance by month**", ""]
     if attendance is None:
@@ -131,7 +130,7 @@ def render(staging, attendance, today, updated=None):
         width = len(f"{top:,}")
         lines.append("```")
         for month, count in attendance:
-            lines.append(f"{month:%Y-%m} {count:>{width},} {bar(count, top)}")
+            lines.append(f"{month:%Y-%m} {bar(count, top)}")
         lines.append("```")
 
     return "\n".join(lines) + "\n"
