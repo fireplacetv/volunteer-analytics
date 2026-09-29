@@ -28,12 +28,13 @@ def load_wordlist(name: str) -> list[str]:
         return [line.strip() for line in f if line.strip()]
 
 
-# Fake names are built from these lists, e.g. "Brave Otter". They are for
-# readability only: two people can share a fake name, so never join or count
-# on them. Use the *_hash fields or record IDs instead. Editing the lists
-# changes existing fake names on the next full reload.
+# Fake names are built from these lists, e.g. "Brave Otter" or "Otter Jumps".
+# They are for readability only: two people can share a fake name, so never
+# join or count on them. Use the *_hash fields or record IDs instead. Editing
+# the lists changes existing fake names on the next full reload.
 ADJECTIVES = load_wordlist("adjectives")
 ANIMALS = load_wordlist("animals")
+VERBS = load_wordlist("verbs")
 
 
 def get_pii_key() -> bytes:
@@ -58,13 +59,24 @@ def hash_value(value, key: bytes) -> str:
 
 def fake_name(digest: str, method: str) -> str:
     """Pick a stable fake name from a hex digest."""
-    first = ADJECTIVES[int(digest[:16], 16) % len(ADJECTIVES)]
-    last = ANIMALS[int(digest[16:32], 16) % len(ANIMALS)]
-    if method == "first_name":
-        return first
-    if method == "last_name":
-        return last
-    return f"{first} {last}"
+    pattern = int(digest[32:34], 16) % 2
+
+    if pattern == 0:  # adjective-animal
+        adj = ADJECTIVES[int(digest[:16], 16) % len(ADJECTIVES)]
+        animal = ANIMALS[int(digest[16:32], 16) % len(ANIMALS)]
+        if method == "first_name":
+            return adj
+        if method == "last_name":
+            return animal
+        return f"{adj} {animal}"
+    else:  # animal-verb
+        animal = ANIMALS[int(digest[:16], 16) % len(ANIMALS)]
+        verb = VERBS[int(digest[16:32], 16) % len(VERBS)]
+        if method == "first_name":
+            return animal
+        if method == "last_name":
+            return verb
+        return f"{animal} {verb}"
 
 
 def hashed_field_name(field: str) -> str:
