@@ -10,6 +10,7 @@ from data_report import (
     render,
     staging_models,
     staging_summary,
+    updated_line,
 )
 
 TODAY = datetime.date(2026, 3, 15)
@@ -87,6 +88,18 @@ class DataReportTest(unittest.TestCase):
         self.assertIn("`stg_project_volunteers`", report)
         self.assertIn("| volunteers | 2 | 2026-03-13 (2d) |", report)
         self.assertIn("2026-01 2 ████████████████", report)
+
+    def test_updated_line_shows_time_commit_and_run(self):
+        now = datetime.datetime(2026, 3, 15, 9, 5, tzinfo=datetime.timezone.utc)
+        self.assertEqual(
+            updated_line(now, commit="1e6d02f19625fad4", run_url="https://example/run"),
+            "<sub>Updated 2026-03-15 09:05 UTC for 1e6d02f · [run](https://example/run)</sub>",
+        )
+        self.assertEqual(updated_line(now), "<sub>Updated 2026-03-15 09:05 UTC</sub>")
+
+    def test_render_puts_updated_line_under_headline(self):
+        report = render(staging_summary(self.con, MODELS), None, TODAY, updated="<sub>Updated x</sub>")
+        self.assertEqual(report.splitlines()[2], "<sub>Updated x</sub>")
 
 
 if __name__ == "__main__":

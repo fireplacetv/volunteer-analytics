@@ -96,14 +96,25 @@ def days_ago(latest, today):
     return f"{latest.isoformat()} ({days}d)"
 
 
-def render(staging, attendance, today, run_url=None):
+def updated_line(now, commit=None, run_url=None):
+    """Small print under the headline saying which run and commit the report reflects."""
+    parts = [f"Updated {now:%Y-%m-%d %H:%M} UTC"]
+    if commit:
+        parts[0] += f" for {commit[:7]}"
+    if run_url:
+        parts.append(f"[run]({run_url})")
+    return f"<sub>{' · '.join(parts)}</sub>"
+
+
+def render(staging, attendance, today, updated=None):
     missing = [model for model, count, _ in staging if not count]
     status = "⚠️" if missing else "✅"
     headline = f"{status} **Data report** · {len(staging) - len(missing)}/{len(staging)} staging models have rows"
-    if run_url:
-        headline += f" · [run]({run_url})"
 
-    lines = [MARKER, headline, ""]
+    lines = [MARKER, headline]
+    if updated:
+        lines.append(updated)
+    lines.append("")
     if missing:
         lines += [f"Empty or missing: {', '.join(f'`{m}`' for m in missing)}", ""]
 
@@ -139,7 +150,11 @@ def main():
         staging_summary(con, models),
         attendance_by_month(con, today),
         today,
-        run_url=os.environ.get("RUN_URL"),
+        updated=updated_line(
+            datetime.datetime.now(datetime.timezone.utc),
+            commit=os.environ.get("COMMIT_SHA"),
+            run_url=os.environ.get("RUN_URL"),
+        ),
     )
     with open(output, "w") as f:
         f.write(report)

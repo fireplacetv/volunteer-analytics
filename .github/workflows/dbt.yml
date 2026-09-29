@@ -79,11 +79,13 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -e DUCKDB_PATH \
             -e RUN_URL \
+            -e COMMIT_SHA \
             volunteer-analytics:latest \
             python scripts/data_report.py artifacts/data_report.md
           cat artifacts/data_report.md >> "$GITHUB_STEP_SUMMARY"
