@@ -87,7 +87,9 @@ class DataReportTest(unittest.TestCase):
         self.assertIn("⚠️", report)
         self.assertIn("`stg_project_volunteers`", report)
         self.assertIn("| volunteers | 2026-03-13 (2d) |", report)
-        self.assertIn("2026-01 2 ████████████████", report)
+        # Check for attendance with bars but no count values
+        self.assertIn("2026-01", report)  # Month shown
+        self.assertNotIn("2026-01  ", report)  # But no padding for count alignment
         self.assertNotIn("rows", report.lower())  # No row count reporting
 
     def test_updated_line_shows_time_commit_and_run(self):

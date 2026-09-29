@@ -18,7 +18,7 @@ MARKER = "<!-- data-report -->"
 MANIFEST_PATH = "dbt/target/manifest.json"
 
 ATTENDANCE_MONTHS = 3
-BAR_WIDTH = 16
+BAR_WIDTH = 12
 
 
 def staging_models(manifest):
@@ -131,10 +131,9 @@ def render(staging, attendance, today, updated=None):
         lines.append("`fct_attendance` not found")
     else:
         top = max(count for _, count in attendance)
-        width = len(f"{top:,}")
         lines.append("```")
         for month, count in attendance:
-            lines.append(f"{month:%Y-%m} {count:>{width},} {bar(count, top)}")
+            lines.append(f"{month:%Y-%m} {bar(count, top)}")
         lines.append("```")
 
     return "\n".join(lines) + "\n"
