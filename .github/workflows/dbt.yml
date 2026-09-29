@@ -79,10 +79,9 @@ jobs:
             sh -c "cd dbt && dbt test"
 
       - name: Generate data report
-        if: github.event_name == 'pull_request'
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
@@ -91,6 +90,7 @@ jobs:
             -e COMMIT_SHA \
             volunteer-analytics:latest \
             python scripts/data_report.py artifacts/data_report.md
+          cat artifacts/data_report.md
           cat artifacts/data_report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Post data report to PR
@@ -148,6 +148,7 @@ jobs:
             let message = conclusion === 'success'
               ? '✅ dbt CI passed'
               : `❌ dbt CI failed - [view details](${runUrl})`;
+            console.log(message);
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
