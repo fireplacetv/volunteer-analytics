@@ -1,8 +1,8 @@
-name: 'volunteer_analytics'
+name: 'openoakland_analytics'
 version: '1.0.0'
 config-version: 2
 
-profile: 'volunteer_analytics'
+profile: 'openoakland_analytics'
 
 model-paths: ['models']
 analysis-paths: ['analysis']
@@ -17,14 +17,14 @@ clean-targets:
   - 'dbt_packages'
 
 models:
-  volunteer_analytics:
+  openoakland_analytics:
     staging:
       +materialized: view
-      +schema: stg_airtable
+      schema: stg_airtable
     marts:
       +materialized: table
-      +schema: marts
+      schema: marts
 
 dispatch:
   - macro_namespace: dbt_utils
-    search_order: ['volunteer_analytics', 'dbt_utils']
+    search_order: ['openoakland_analytics', 'dbt_utils']

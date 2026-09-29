@@ -104,7 +104,7 @@ To start using a field: move it from `unused` to `allow` (or `pseudonymize`) in 
 
 **Why:** The project has small data volumes. Full refreshes are fast and guarantee correctness. Incremental logic adds complexity without current benefit.
 
-**Trade-off:** Pipeline runs full `dbt build` each nightly. Phase 3 can optimize with incremental strategies once data volume warrants it.
+**Trade-off:** Pipeline runs `dbt run` followed by a separate `dbt test` step each nightly (rather than a single `dbt build`), so all models finish building even if an upstream test fails — this makes it easy to tell a data-quality failure apart from a build/syntax failure. Phase 3 can optimize with incremental strategies once data volume warrants it.
 
 ---
 
