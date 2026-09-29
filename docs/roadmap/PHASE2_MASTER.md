@@ -763,7 +763,7 @@ Trade-off: Deferred fields available in staging if needed urgently.
 
 ## How to Run the Pipeline
 docker compose build
-docker compose run --rm dev bash -c "python dlt/airtable_pipeline/airtable_source.py && dbt run && dbt test"
+docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && dbt run && dbt test"
 
 ## If Tests Fail
 - Orphaned attendance (warn): Check Airtable Event attendance for rows with missing volunteer_id link

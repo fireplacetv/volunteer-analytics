@@ -41,8 +41,18 @@ Your Airtable Base ID. Identifies which Airtable workspace to pull data from.
 AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
 ```
 
+### DESTINATION_TYPE
+Which database dlt loads into. Defaults to `duckdb`. Any destination dlt supports works; the requirements install `duckdb` and `postgres`.
+
+For anything other than DuckDB, credentials come from dlt's standard variables:
+```
+DESTINATION_TYPE=postgres
+DESTINATION__POSTGRES__CREDENTIALS=postgresql://user:password@host:5432/database
+```
+Switching destinations needs no code change: the incremental cursor is read from whichever destination is configured. dbt still reads only DuckDB for now.
+
 ### DUCKDB_PATH
-Path to the DuckDB database file. Both dlt and dbt use this same path.
+Path to the DuckDB database file, used when `DESTINATION_TYPE` is `duckdb` (the default). Both dlt and dbt use this same path.
 
 **Options:**
 - **Relative path** (default, relative to project root):
@@ -64,7 +74,7 @@ Path to the DuckDB database file. Both dlt and dbt use this same path.
 
 Both dlt and dbt use the same `DUCKDB_PATH` environment variable:
 
-- **dlt** (`airtable_source.py`): Reads `DUCKDB_PATH` to determine where to write extracted data
+- **dlt** (`run.py`): Reads `DUCKDB_PATH` to determine where to write extracted data
 - **dbt** (`profiles.yml`): Reads `DUCKDB_PATH` to determine where to read source data for transformations
 
 This ensures both tools are always pointing to the same database.
@@ -78,7 +88,7 @@ source .env
 set +a
 
 # Run dlt extraction
-python dlt/airtable_pipeline/airtable_source.py
+python dlt/airtable_pipeline/run.py
 
 # Run dbt transformations
 dbt run
