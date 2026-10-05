@@ -748,7 +748,7 @@ Trade-off: Mart SQL more complex, but preserves raw data.
 Volunteer PII (names, emails, demographics) in staging; excluded from dim_volunteer SELECT.
 dlt-level filtering deferred to Phase 3 (before public launch).
 Why: Project in dev; focus Phase 2 on correct marts. Phase 3 hardens for production.
-Trade-off: Staging holds PII; DuckDB file must stay private. Documented in ROADMAP_FUTURE.md.
+Trade-off: Staging holds PII; DuckDB file must stay private. Documented in `../future/ROADMAP_FUTURE.md`.
 
 ## Deferred Multi-Select Parsing (Phase 3)
 Fields like availability[], language_fluency[], nonprofit_skills[] extracted in stg_volunteers
@@ -825,7 +825,7 @@ Add step after `dbt test`:
 - All other tasks can proceed in parallel
 
 ### ⏸️ Deferred (Not Phase 2)
-- dlt-level PII filtering → Phase 3 (ROADMAP_FUTURE.md)
+- dlt-level PII filtering → Phase 3 (`../future/ROADMAP_FUTURE.md`)
 - Deferred field parsing (availability, language_fluency, skills) → Phase 3
 - Metrics and reporting → Phase 3
 
@@ -919,6 +919,6 @@ This master document consolidates:
 - `PHASE2_TODO.md` — Task breakdown
 - `PHASE2_CONFLICTS_RESOLVED.md` — Conflict analysis
 - `PHASE2_FINAL_REVIEW.md` — Readiness assessment
-- `ROADMAP_FUTURE.md` — Phase 3+ backlog
+- `../future/ROADMAP_FUTURE.md` — Phase 3+ backlog
 
-**All documents are in** `docs/roadmap/` and committed to the `phase-2/marts-and-metrics` branch.
+**All documents are in** `docs/roadmap/phase-2/` (future backlog in `docs/roadmap/future/`) and committed to the `phase-2/marts-and-metrics` branch.

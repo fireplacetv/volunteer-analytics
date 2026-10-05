@@ -148,6 +148,6 @@ To start using a field: move it from `unused` to `allow` (or `pseudonymize`) in 
 
 ## References
 
-- See `PHASE2_MASTER.md` for full implementation guide
+- See `roadmap/phase-2/PHASE2_MASTER.md` for full implementation guide
 - See `HANDOFF.md` for operational runbook
-- See phase-2-plan.md for original spec
+- See `roadmap/phase-2/phase-2-plan.md` for original spec

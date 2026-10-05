@@ -192,8 +192,8 @@ If Airtable field names change, update the field lists in `dlt/airtable_pipeline
 ### Step 1: Understand the Project
 
 1. Read `docs/SETUP.md` — Project setup and environment
-2. Read `docs/roadmap/phase-2-plan.md` — Original Phase 2 spec
-3. Read `docs/roadmap/PHASE2_MASTER.md` — Consolidated Phase 2 plan
+2. Read `docs/roadmap/phase-2/phase-2-plan.md` — Original Phase 2 spec
+3. Read `docs/roadmap/phase-2/PHASE2_MASTER.md` — Consolidated Phase 2 plan
 4. Read `docs/DECISIONS.md` — Design rationale (this helps with edge cases)
 
 ### Step 2: Understand the Data
@@ -280,4 +280,4 @@ Check dbt logs for specific errors.
 
 ---
 
-**Questions?** Check DECISIONS.md for design rationale. If still unclear, reach out to the project lead or review phase-2-plan.md.
+**Questions?** Check DECISIONS.md for design rationale. If still unclear, reach out to the project lead or review `roadmap/phase-2/phase-2-plan.md`.
