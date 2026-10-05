@@ -1,4 +1,4 @@
-# Phase 2 Design Decisions
+# Architecture & Design Decisions
 
 ## event_id = 0 for Monthly Meetings
 
