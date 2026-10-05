@@ -8,7 +8,7 @@ This project extracts volunteer data from Airtable, transforms it with dlt and d
 
 ## Getting started
 
-See `docs/SETUP.md` for setup instructions.
+See `docs/SETUP.md` for setup instructions, and `docs/ARCHITECTURE.md` for how the pipeline fits together.
 
 ## Project structure
 
@@ -25,9 +25,11 @@ See `docs/SETUP.md` for setup instructions.
 │   └── models/staging/             # dbt staging models (Phase 1+)
 ├── docs/
 │   ├── SETUP.md                    # Setup and troubleshooting guide
+│   ├── ARCHITECTURE.md             # Pipeline architecture overview
 │   └── roadmap/                    # Phase planning and status
-│       ├── phase1-plan.md          # Roadmap for Phase 1 work
-│       └── PHASE1_STATUS.md        # Phase 1 implementation status
+│       ├── phase-1/                # Phase 1: core pipeline (complete)
+│       ├── phase-2/                # Phase 2: marts & metrics (complete)
+│       └── future/                 # Phase 3+ backlog
 └── README.md                       # This file
 ```
 

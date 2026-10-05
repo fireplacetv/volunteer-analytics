@@ -1,6 +1,6 @@
 # Setup — Volunteer Analytics Platform (Phase 1+)
 
-This is the Phase 1+ setup guide for local development. Everything runs in Docker containers, so **you only need Docker Desktop installed** — no Python, dlt, or dbt installation needed.
+This is the Phase 1+ setup guide for local development. Everything runs in Docker containers, so **you only need Docker Desktop installed** — no Python, dlt, or dbt installation needed. For how the pieces fit together, see `ARCHITECTURE.md`.
 
 ## Prerequisites
 
@@ -147,4 +147,4 @@ docker compose run --rm dev bash -c "python dlt/airtable_pipeline/run.py && dbt 
 
 ## Next steps
 
-The pipeline runs all tests on each run (Step 4 above). If a test fails, check `dbt test` output to see which records are missing required fields — these are data-quality issues in Airtable, not code issues. See `../phase1-plan.md` for more context on Phase 1 and beyond.
+The pipeline runs all tests on each run (Step 4 above). If a test fails, check `dbt test` output to see which records are missing required fields — these are data-quality issues in Airtable, not code issues. See `roadmap/phase-1/phase1-plan.md` for more context on Phase 1 and beyond.

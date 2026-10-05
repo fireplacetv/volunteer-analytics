@@ -93,4 +93,4 @@ docker compose run --rm dev duckdb artifacts/openoakland.duckdb -c "SELECT COUNT
 - `dbt/models/staging/*.sql` — 6 files, staging layer
 - `dbt/tests/staging_tests.yml` — new, not_null/unique/relationships tests
 - `docs/SETUP.md` — rewritten for Docker-first workflow
-- `docs/roadmap/PHASE1_STATUS.md` — updated with Step 1 completion
+- `docs/roadmap/phase-1/PHASE1_STATUS.md` — updated with Step 1 completion
